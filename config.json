@@ -1,0 +1,31 @@
+{
+  "employees": [
+    {
+      "id": 1,
+      "firstName": "Karolinka",
+      "lastName": "Pacinka"
+    },
+    {
+      "id": 2,
+      "firstName": "Michalek",
+      "lastName": "Pampalek"
+    },
+    {
+      "id": 3,
+      "firstName": "Pamela",
+      "lastName": "Anderson"
+    }
+  ],
+  "workingHours": {
+    "defaultDailyHours": 7.35,
+    "units": "hours"
+  },
+  "shifts": {
+    "defaultShiftLength": 12,
+    "units": "hours"
+  },
+  "schedule": {
+    "timezone": "UTC",
+    "month": 8
+  }
+}
