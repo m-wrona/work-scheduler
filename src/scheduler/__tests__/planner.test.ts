@@ -1,4 +1,3 @@
-import { describe, it, expect, beforeEach } from 'bun:test';
 import { assignShiftsForDay } from '../planner';
 import type { EmployeeShifts } from '../../types/schedule';
 import type { Employee } from '../../types/config';
