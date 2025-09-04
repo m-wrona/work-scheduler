@@ -8,34 +8,31 @@ export interface DayShift {
 export interface ScheduleDay {
   date: Date;
   weekDay: number;
-  shifts?: DayShift;
+  shift: DayShift;
 }
 
 export interface MonthlySchedulePlan {
   month: number;
   year: number;
   days: ScheduleDay[];
-  totalWorkingDays: number;
-  totalEmployees: number;
-  config: {
-    dailyHours: number;
-    shiftLength: number;
-    timezone: string;
-  };
-}
-
-export interface ScheduleGenerationOptions {
-  employeesPerShift?: number;
-  rotateShifts?: boolean;
-  customRotation?: Employee[][];
 }
 
 export interface ScheduleGenerationResult {
   schedule: MonthlySchedulePlan;
   warnings: string[];
-  statistics: {
-    totalShifts: number;
-    averageShiftsPerEmployee: number;
-    shiftsPerEmployee: Record<number, number>;
+  errors: string[];
+}
+
+export interface PlannerOptions {
+  employeesPerShift?: number;
+  rotateShifts?: boolean;
+  customRotation?: Employee[][];
+}
+
+export function createPlannerOptions(options: PlannerOptions = {}): Required<PlannerOptions> {
+  return {
+    employeesPerShift: options.employeesPerShift ?? 4,
+    rotateShifts: options.rotateShifts ?? true,
+    customRotation: options.customRotation ?? [],
   };
 }

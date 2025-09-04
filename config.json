@@ -113,7 +113,8 @@
   "shifts": {
     "defaultShiftLength": 12,
     "units": "hours",
-    "employeesPerShift": 4
+    "employeesPerShift": 4,
+    "daysFreeBetweenShifts": 1
   },
   "schedule": {
     "timezone": "UTC",

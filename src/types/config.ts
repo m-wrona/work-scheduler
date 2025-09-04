@@ -13,6 +13,7 @@ export interface Shifts {
   defaultShiftLength: number;
   units: string;
   employeesPerShift: number;
+  daysFreeBetweenShifts: number;
 }
 
 export interface Schedule {
@@ -32,7 +33,7 @@ export function isValidConfig(config: any): config is WorkSchedulerConfig {
   return (
     config &&
     Array.isArray(config.employees) &&
-    config.employees.every(emp => 
+    config.employees.every((emp: Employee) => 
       typeof emp.id === 'number' &&
       typeof emp.firstName === 'string' &&
       typeof emp.lastName === 'string'
@@ -44,6 +45,7 @@ export function isValidConfig(config: any): config is WorkSchedulerConfig {
     typeof config.shifts.defaultShiftLength === 'number' &&
     typeof config.shifts.units === 'string' &&
     typeof config.shifts.employeesPerShift === 'number' &&
+    typeof config.shifts.daysFreeBetweenShifts === 'number' &&
     config.schedule &&
     typeof config.schedule.timezone === 'string' &&
     typeof config.schedule.month === 'number'
