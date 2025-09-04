@@ -39,14 +39,12 @@ export function generateMonthlySchedule(
     days.push(scheduleDay);
   }
 
-  const schedule: MonthlySchedulePlan = {
-    month,
-    year,
-    days,
-  };
-
   return {
-    schedule,
+    schedule: {
+      month,
+      year,
+      days,
+    },
     errors: [],
     warnings: []
   };
