@@ -1,4 +1,3 @@
-import { describe, it, expect, beforeEach } from 'bun:test';
 import { assignShiftsForDay } from '../planner';
 import type { EmployeeShifts } from '../../types/schedule';
 import type { Employee } from '../../types/config';
@@ -36,10 +35,10 @@ describe('assignShiftsForDay', () => {
       expect(result.nightShift).toHaveLength(2);
 
       // Check that employees are assigned in sequence order
-      expect(result.dailyShift[0].employee.id).toBe(1); // John
-      expect(result.dailyShift[1].employee.id).toBe(2); // Jane
-      expect(result.nightShift[0].employee.id).toBe(3); // Bob
-      expect(result.nightShift[1].employee.id).toBe(4); // Alice
+      expect(result.dailyShift[0]?.employee.id).toBe(1); // John
+      expect(result.dailyShift[1]?.employee.id).toBe(2); // Jane
+      expect(result.nightShift[0]?.employee.id).toBe(3); // Bob
+      expect(result.nightShift[1]?.employee.id).toBe(4); // Alice
     });
 
     it('should update nextShiftDate for assigned employees', () => {
@@ -59,8 +58,8 @@ describe('assignShiftsForDay', () => {
       });
 
       // Check that unassigned employees still have undefined nextShiftDate
-      expect(employees[4].nextShiftDate).toBeUndefined(); // Charlie
-      expect(employees[5].nextShiftDate).toBeUndefined(); // Diana
+      expect(employees[4]?.nextShiftDate).toBeUndefined(); // Charlie
+      expect(employees[5]?.nextShiftDate).toBeUndefined(); // Diana
     });
 
     it('should work with different employeesPerShift values', () => {
@@ -68,8 +67,8 @@ describe('assignShiftsForDay', () => {
 
       expect(result.dailyShift).toHaveLength(1);
       expect(result.nightShift).toHaveLength(1);
-      expect(result.dailyShift[0].employee.id).toBe(1); // John
-      expect(result.nightShift[0].employee.id).toBe(2); // Jane
+      expect(result.dailyShift[0]?.employee.id).toBe(1); // John
+      expect(result.nightShift[0]?.employee.id).toBe(2); // Jane
     });
 
     it('should work with zero daysFreeAfterShift', () => {
@@ -98,16 +97,16 @@ describe('assignShiftsForDay', () => {
       const futureDate = new Date(currentDate);
       futureDate.setDate(currentDate.getDate() + 2);
       
-      employees[0].nextShiftDate = futureDate; // John unavailable
-      employees[1].nextShiftDate = futureDate; // Jane unavailable
+      if (employees[0]) employees[0].nextShiftDate = futureDate; // John unavailable
+      if (employees[1]) employees[1].nextShiftDate = futureDate; // Jane unavailable
 
       const result = assignShiftsForDay(employees, 2, 1, currentDate);
 
       // Should skip John and Jane, assign Bob, Alice, Charlie, Diana
-      expect(result.dailyShift[0].employee.id).toBe(3); // Bob
-      expect(result.dailyShift[1].employee.id).toBe(4); // Alice
-      expect(result.nightShift[0].employee.id).toBe(5); // Charlie
-      expect(result.nightShift[1].employee.id).toBe(6); // Diana
+      expect(result.dailyShift[0]?.employee.id).toBe(3); // Bob
+      expect(result.dailyShift[1]?.employee.id).toBe(4); // Alice
+      expect(result.nightShift[0]?.employee.id).toBe(5); // Charlie
+      expect(result.nightShift[1]?.employee.id).toBe(6); // Diana
     });
 
     it('should include employees with nextShiftDate on or before current date', () => {
@@ -115,13 +114,13 @@ describe('assignShiftsForDay', () => {
       const pastDate = new Date(currentDate);
       pastDate.setDate(currentDate.getDate() - 1);
       
-      employees[0].nextShiftDate = pastDate; // John available (past date)
-      employees[1].nextShiftDate = currentDate; // Jane available (same date)
+      if (employees[0]) employees[0].nextShiftDate = pastDate; // John available (past date)
+      if (employees[1]) employees[1].nextShiftDate = currentDate; // Jane available (same date)
 
       const result = assignShiftsForDay(employees, 2, 1, currentDate);
 
-      expect(result.dailyShift[0].employee.id).toBe(1); // John
-      expect(result.dailyShift[1].employee.id).toBe(2); // Jane
+      expect(result.dailyShift[0]?.employee.id).toBe(1); // John
+      expect(result.dailyShift[1]?.employee.id).toBe(2); // Jane
     });
 
     it('should handle mixed availability correctly', () => {
@@ -131,18 +130,18 @@ describe('assignShiftsForDay', () => {
       const pastDate = new Date(currentDate);
       pastDate.setDate(currentDate.getDate() - 1);
 
-      employees[0].nextShiftDate = futureDate; // John unavailable
-      employees[1].nextShiftDate = pastDate;   // Jane available
-      employees[2].nextShiftDate = undefined;  // Bob available
-      employees[3].nextShiftDate = currentDate; // Alice available
+      if (employees[0]) employees[0].nextShiftDate = futureDate; // John unavailable
+      if (employees[1]) employees[1].nextShiftDate = pastDate;   // Jane available
+      if (employees[2]) employees[2].nextShiftDate = undefined;  // Bob available
+      if (employees[3]) employees[3].nextShiftDate = currentDate; // Alice available
 
       const result = assignShiftsForDay(employees, 2, 1, currentDate);
 
       // Should assign Jane, Bob, Alice, Charlie (skipping John)
-      expect(result.dailyShift[0].employee.id).toBe(2); // Jane
-      expect(result.dailyShift[1].employee.id).toBe(3); // Bob
-      expect(result.nightShift[0].employee.id).toBe(4); // Alice
-      expect(result.nightShift[1].employee.id).toBe(5); // Charlie
+      expect(result.dailyShift[0]?.employee.id).toBe(2); // Jane
+      expect(result.dailyShift[1]?.employee.id).toBe(3); // Bob
+      expect(result.nightShift[0]?.employee.id).toBe(4); // Alice
+      expect(result.nightShift[1]?.employee.id).toBe(5); // Charlie
     });
   });
 
@@ -166,9 +165,9 @@ describe('assignShiftsForDay', () => {
       const futureDate = new Date(currentDate);
       futureDate.setDate(currentDate.getDate() + 2);
       
-      employees[0].nextShiftDate = futureDate; // John unavailable
-      employees[1].nextShiftDate = futureDate; // Jane unavailable
-      employees[2].nextShiftDate = futureDate; // Bob unavailable
+      if (employees[0]) employees[0].nextShiftDate = futureDate; // John unavailable
+      if (employees[1]) employees[1].nextShiftDate = futureDate; // Jane unavailable
+      if (employees[2]) employees[2].nextShiftDate = futureDate; // Bob unavailable
       // Alice, Charlie, Diana are available
 
       expect(() => {
@@ -199,7 +198,7 @@ describe('assignShiftsForDay', () => {
     });
 
     it('should handle single employee with sufficient availability', () => {
-      const singleEmployee = [employees[0]];
+      const singleEmployee = [employees[0]!];
       
       expect(() => {
         assignShiftsForDay(singleEmployee, 1, 1, currentDate);
@@ -247,10 +246,10 @@ describe('assignShiftsForDay', () => {
       const result = assignShiftsForDay(orderedEmployees, 2, 1, currentDate);
 
       // Verify strict sequential order
-      expect(result.dailyShift[0].employee.id).toBe(10);
-      expect(result.dailyShift[1].employee.id).toBe(20);
-      expect(result.nightShift[0].employee.id).toBe(30);
-      expect(result.nightShift[1].employee.id).toBe(40);
+      expect(result.dailyShift[0]?.employee.id).toBe(10);
+      expect(result.dailyShift[1]?.employee.id).toBe(20);
+      expect(result.nightShift[0]?.employee.id).toBe(30);
+      expect(result.nightShift[1]?.employee.id).toBe(40);
     });
   });
 });
