@@ -1,5 +1,11 @@
 import type { Employee } from './config';
 
+export interface EmployeeShifts {
+  employee: Employee;
+  shifts?: DayShift[];
+  nextShiftDate?: Date;
+}
+
 export interface DayShift {
   dailyShift: Employee[];
   nightShift: Employee[];
