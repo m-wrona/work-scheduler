@@ -1,0 +1,15 @@
+{
+  "jest.disabledWorkspaceFolders": ["work-scheduler"],
+  "jest.autoRun": "off",
+  "jest.showCoverageOnLoad": false,
+  "jest.enable": false,
+  "jest.autoEnable": false,
+  "bun.enableTelemetry": false,
+  "typescript.preferences.includePackageJsonAutoImports": "auto",
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "test.defaultGutterClickAction": "debug",
+  "test.autoRun.delay": 1000,
+  "test.autoRun": "off",
+  "test.explorerLocation": "sidebar",
+  "test.defaultGutterClickAction": "run"
+}
