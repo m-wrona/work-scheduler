@@ -56,7 +56,7 @@ export function generateMonthlySchedule(
   };
 }
 
-function assignShiftsForDay(
+export function assignShiftsForDay(
   employees: EmployeeShifts[],
   employeesPerShift: number,
   daysFreeAfterShift: number,
