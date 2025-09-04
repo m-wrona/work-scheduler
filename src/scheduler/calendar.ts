@@ -67,3 +67,19 @@ export function calculateMonthlyWorkingHours(
 export function getCurrentYear(): number {
   return new Date().getFullYear();
 }
+
+/**
+ * Get all days in a given month (including weekends)
+ */
+export function getAllDaysInMonth(month: number, year: number): Date[] {
+  const firstDay = new Date(year, month - 1, 1);
+  const lastDay = new Date(year, month, 0);
+  const totalDays = lastDay.getDate();
+  
+  const allDays: Date[] = [];
+  for (let day = 1; day <= totalDays; day++) {
+    allDays.push(new Date(year, month - 1, day));
+  }
+  
+  return allDays;
+}

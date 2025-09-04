@@ -2,18 +2,108 @@
   "employees": [
     {
       "id": 1,
-      "firstName": "Karolinka",
-      "lastName": "Pacinka"
+      "firstName": "",
+      "lastName": "Employee 1"
     },
     {
       "id": 2,
-      "firstName": "Michalek",
-      "lastName": "Pampalek"
+      "firstName": "",
+      "lastName": "Employee 2"
     },
     {
       "id": 3,
-      "firstName": "Pamela",
-      "lastName": "Anderson"
+      "firstName": "",
+      "lastName": "Employee 3"
+    },
+    {
+      "id": 4,
+      "firstName": "",
+      "lastName": "Employee 4"
+    },
+    {
+      "id": 5,
+      "firstName": "",
+      "lastName": "Employee 5"
+    },
+    {
+      "id": 6,
+      "firstName": "",
+      "lastName": "Employee 6"
+    },
+    {
+      "id": 7,
+      "firstName": "",
+      "lastName": "Employee 7"
+    },
+    {
+      "id": 8,
+      "firstName": "",
+      "lastName": "Employee 8"
+    },
+    {
+      "id": 9,
+      "firstName": "",
+      "lastName": "Employee 9"
+    },
+    {
+      "id": 10,
+      "firstName": "",
+      "lastName": "Employee 10"
+    },
+    {
+      "id": 11,
+      "firstName": "",
+      "lastName": "Employee 11"
+    },
+    {
+      "id": 12,
+      "firstName": "",
+      "lastName": "Employee 12"
+    },
+    {
+      "id": 13,
+      "firstName": "",
+      "lastName": "Employee 13"
+    },
+    {
+      "id": 14,
+      "firstName": "",
+      "lastName": "Employee 14"
+    },
+    {
+      "id": 15,
+      "firstName": "",
+      "lastName": "Employee 15"
+    },
+    {
+      "id": 16,
+      "firstName": "",
+      "lastName": "Employee 16"
+    },
+    {
+      "id": 17,
+      "firstName": "",
+      "lastName": "Employee 17"
+    },
+    {
+      "id": 18,
+      "firstName": "",
+      "lastName": "Employee 18"
+    },
+    {
+      "id": 19,
+      "firstName": "",
+      "lastName": "Employee 19"
+    },
+    {
+      "id": 20,
+      "firstName": "",
+      "lastName": "Employee 20"
+    },
+    {
+      "id": 21,
+      "firstName": "",
+      "lastName": "Employee 21"
     }
   ],
   "workingHours": {
@@ -22,7 +112,8 @@
   },
   "shifts": {
     "defaultShiftLength": 12,
-    "units": "hours"
+    "units": "hours",
+    "employeesPerShift": 4
   },
   "schedule": {
     "timezone": "UTC",

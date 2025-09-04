@@ -12,6 +12,7 @@ export interface WorkingHours {
 export interface Shifts {
   defaultShiftLength: number;
   units: string;
+  employeesPerShift: number;
 }
 
 export interface Schedule {
@@ -42,6 +43,7 @@ export function isValidConfig(config: any): config is WorkSchedulerConfig {
     config.shifts &&
     typeof config.shifts.defaultShiftLength === 'number' &&
     typeof config.shifts.units === 'string' &&
+    typeof config.shifts.employeesPerShift === 'number' &&
     config.schedule &&
     typeof config.schedule.timezone === 'string' &&
     typeof config.schedule.month === 'number'

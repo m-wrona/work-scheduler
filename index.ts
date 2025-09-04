@@ -1,8 +1,8 @@
 import config from './config.json';
 import type { WorkSchedulerConfig } from './src/types/config';
 import { isValidConfig } from './src/types/config';
-import { calculateMonthlyWorkingHours, getCurrentYear } from './src/scheduler/scheduleCalculator';
-import { generateMonthlySchedule, exportScheduleToText } from './src/scheduler/scheduleGenerator';
+import { calculateMonthlyWorkingHours, getCurrentYear } from './src/scheduler/calendar';
+import { generateMonthlySchedule, exportScheduleToText } from './src/scheduler/planner';
 
 // Type the config
 const typedConfig: WorkSchedulerConfig = config;

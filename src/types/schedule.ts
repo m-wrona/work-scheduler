@@ -7,7 +7,7 @@ export interface DayShift {
 
 export interface ScheduleDay {
   date: Date;
-  isWorkingDay: boolean;
+  weekDay: number;
   shifts?: DayShift;
 }
 
