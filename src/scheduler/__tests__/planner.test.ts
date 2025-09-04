@@ -98,8 +98,8 @@ describe('assignShiftsForDay', () => {
       const futureDate = new Date(currentDate);
       futureDate.setDate(currentDate.getDate() + 2);
       
-      employees[0].nextShiftDate = futureDate; // John unavailable
-      employees[1].nextShiftDate = futureDate; // Jane unavailable
+      employees[0]!.nextShiftDate = futureDate; // John unavailable
+      employees[1]!.nextShiftDate = futureDate; // Jane unavailable
 
       const result = assignShiftsForDay(employees, 2, 1, currentDate);
 
@@ -115,8 +115,8 @@ describe('assignShiftsForDay', () => {
       const pastDate = new Date(currentDate);
       pastDate.setDate(currentDate.getDate() - 1);
       
-      employees[0].nextShiftDate = pastDate; // John available (past date)
-      employees[1].nextShiftDate = currentDate; // Jane available (same date)
+      employees[0]!.nextShiftDate = pastDate; // John available (past date)
+      employees[1]!.nextShiftDate = currentDate; // Jane available (same date)
 
       const result = assignShiftsForDay(employees, 2, 1, currentDate);
 
@@ -131,10 +131,10 @@ describe('assignShiftsForDay', () => {
       const pastDate = new Date(currentDate);
       pastDate.setDate(currentDate.getDate() - 1);
 
-      employees[0].nextShiftDate = futureDate; // John unavailable
-      employees[1].nextShiftDate = pastDate;   // Jane available
-      employees[2].nextShiftDate = undefined;  // Bob available
-      employees[3].nextShiftDate = currentDate; // Alice available
+      employees[0]!.nextShiftDate = futureDate; // John unavailable
+      employees[1]!.nextShiftDate = pastDate;   // Jane available
+      employees[2]!.nextShiftDate = undefined;  // Bob available
+      employees[3]!.nextShiftDate = currentDate; // Alice available
 
       const result = assignShiftsForDay(employees, 2, 1, currentDate);
 
@@ -166,9 +166,9 @@ describe('assignShiftsForDay', () => {
       const futureDate = new Date(currentDate);
       futureDate.setDate(currentDate.getDate() + 2);
       
-      employees[0].nextShiftDate = futureDate; // John unavailable
-      employees[1].nextShiftDate = futureDate; // Jane unavailable
-      employees[2].nextShiftDate = futureDate; // Bob unavailable
+      employees[0]!.nextShiftDate = futureDate; // John unavailable
+      employees[1]!.nextShiftDate = futureDate; // Jane unavailable
+      employees[2]!.nextShiftDate = futureDate; // Bob unavailable
       // Alice, Charlie, Diana are available
 
       expect(() => {
@@ -199,7 +199,7 @@ describe('assignShiftsForDay', () => {
     });
 
     it('should handle single employee with sufficient availability', () => {
-      const singleEmployee = [employees[0]];
+      const singleEmployee = [employees[0]!];
       
       expect(() => {
         assignShiftsForDay(singleEmployee, 1, 1, currentDate);
