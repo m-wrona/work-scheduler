@@ -36,8 +36,9 @@ export function generateMonthlySchedule(
       weekDay: date.getDay(),
       shift: assignShiftsForDay(
         employeeShifts,
-        plannerOptions.employeesPerShift,
-        day - 1, // Use day index for rotation
+        config.shifts.employeesPerShift,
+        config.shifts.daysFreeBetweenShifts,
+        date, // Pass the current date
       )
     };
 
@@ -58,12 +59,43 @@ export function generateMonthlySchedule(
 function assignShiftsForDay(
   employees: EmployeeShifts[],
   employeesPerShift: number,
-  dayIndex: number,
+  daysFreeAfterShift: number,
+  currentDate: Date,
 ): DayShift {
+  // Check which employees are available for this date
+  const availableEmployees = employees.filter(emp => {
+    if (!emp.nextShiftDate) {
+      return true; 
+    }
+    return currentDate >= emp.nextShiftDate;
+  });
+
+  // Check if we have enough employees for both shifts
+  const requiredEmployees = employeesPerShift * 2; // day + night shift
+  if (availableEmployees.length < requiredEmployees) {
+    throw new Error(
+      `Not enough available employees for day ${currentDate.getDate()}. ` +
+      `Required: ${requiredEmployees}, Available: ${availableEmployees.length}`
+    );
+  }
+
+  const dailyShiftEmployees = availableEmployees.slice(0, employeesPerShift);
+  const nightShiftEmployees = availableEmployees.slice(employeesPerShift, employeesPerShift * 2);
+
+  const nextAllowedDate = new Date(currentDate);
+  nextAllowedDate.setDate(currentDate.getDate() + daysFreeAfterShift + 1);
+
+  dailyShiftEmployees.forEach(emp => {
+    emp.nextShiftDate = nextAllowedDate;
+  });
+
+  nightShiftEmployees.forEach(emp => {
+    emp.nextShiftDate = nextAllowedDate;
+  });
 
   return {
-    dailyShift: [],
-    nightShift: []
+    dailyShift: dailyShiftEmployees,
+    nightShift: nightShiftEmployees
   };
 }
 

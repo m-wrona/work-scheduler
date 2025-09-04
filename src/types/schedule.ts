@@ -7,8 +7,8 @@ export interface EmployeeShifts {
 }
 
 export interface DayShift {
-  dailyShift: Employee[];
-  nightShift: Employee[];
+  dailyShift: EmployeeShifts[];
+  nightShift: EmployeeShifts[];
 }
 
 export interface ScheduleDay {
