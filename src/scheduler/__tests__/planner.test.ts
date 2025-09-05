@@ -1,6 +1,6 @@
-import { assignShiftsForDay } from '../planner';
+import { assignShiftsForDay, generateMonthlySchedule, createPlannerOptions } from '../planner';
 import type { EmployeeShifts } from '../../types/schedule';
-import type { Employee } from '../../types/config';
+import type { Employee, WorkSchedulerConfig } from '../../types/config';
 
 describe('assignShiftsForDay', () => {
   let employees: EmployeeShifts[];
@@ -250,6 +250,302 @@ describe('assignShiftsForDay', () => {
       expect(result.dailyShift[1]?.employee.id).toBe(20);
       expect(result.nightShift[0]?.employee.id).toBe(30);
       expect(result.nightShift[1]?.employee.id).toBe(40);
+    });
+  });
+});
+
+describe('createPlannerOptions', () => {
+  it('should create default options with current year and month', () => {
+    const options = createPlannerOptions();
+    
+    const now = new Date();
+    expect(options.year).toBe(now.getFullYear());
+    expect(options.month).toBe(now.getMonth() + 1);
+    expect(options.planNextWorkingDays).toBeGreaterThan(0);
+  });
+
+  it('should use provided year and month', () => {
+    const options = createPlannerOptions({ year: 2025, month: 9 });
+    
+    expect(options.year).toBe(2025);
+    expect(options.month).toBe(9);
+    expect(options.planNextWorkingDays).toBe(30);
+  });
+
+  it('should use provided planNextWorkingDays', () => {
+    const options = createPlannerOptions({ planNextWorkingDays: 3 });
+    
+    expect(options.planNextWorkingDays).toBe(3);
+  });
+
+  it('should handle empty options object', () => {
+    const options = createPlannerOptions({});
+    
+    const now = new Date();
+    expect(options.year).toBe(now.getFullYear());
+    expect(options.month).toBe(now.getMonth() + 1);
+    expect(options.planNextWorkingDays).toBeGreaterThan(0);
+  });
+});
+
+describe('generateMonthlySchedule', () => {
+  let config: WorkSchedulerConfig;
+
+  beforeEach(() => {
+    config = {
+      employees: [
+        { id: 1, firstName: 'John', lastName: 'Doe' },
+        { id: 2, firstName: 'Jane', lastName: 'Smith' },
+        { id: 3, firstName: 'Bob', lastName: 'Johnson' },
+        { id: 4, firstName: 'Alice', lastName: 'Brown' },
+        { id: 5, firstName: 'Charlie', lastName: 'Wilson' },
+        { id: 6, firstName: 'Diana', lastName: 'Davis' },
+      ],
+      workingHours: {
+        defaultDailyHours: 8,
+        units: 'hours'
+      },
+      shifts: {
+        defaultShiftLength: 8,
+        units: 'hours',
+        employeesPerShift: 2,
+        daysFreeBetweenShifts: 1
+      },
+      schedule: {
+        timezone: 'UTC',
+        month: 1 // January
+      }
+    };
+  });
+
+  describe('basic functionality', () => {
+    it('should generate schedule for 1 day with small planNextWorkingDays', () => {
+      const result = generateMonthlySchedule(config, 2024, { planNextWorkingDays: 1 });
+
+      expect(result.schedule.year).toBe(2024);
+      expect(result.schedule.month).toBe(1);
+      expect(result.schedule.days).toHaveLength(1);
+      expect(result.errors).toHaveLength(0);
+      expect(result.warnings).toHaveLength(0);
+
+      // Check first day
+      expect(result.schedule.days[0]?.date.getDate()).toBe(1);
+      expect(result.schedule.days[0]?.weekDay).toBe(1); // Monday
+      expect(result.schedule.days[0]?.shift.dailyShift).toHaveLength(2);
+      expect(result.schedule.days[0]?.shift.nightShift).toHaveLength(2);
+    });
+
+    it('should generate schedule for 2 days with zero rest period', () => {
+      const zeroRestConfig = {
+        ...config,
+        shifts: {
+          ...config.shifts,
+          daysFreeBetweenShifts: 0 // No rest period
+        }
+      };
+
+      const result = generateMonthlySchedule(zeroRestConfig, 2024, { planNextWorkingDays: 2 });
+
+      expect(result.schedule.days).toHaveLength(2);
+      expect(result.errors).toHaveLength(0);
+      expect(result.warnings).toHaveLength(0);
+
+      // Check all days have proper structure
+      result.schedule.days.forEach((day, index) => {
+        expect(day.date.getDate()).toBe(index + 1);
+        expect(day.shift.dailyShift).toHaveLength(2);
+        expect(day.shift.nightShift).toHaveLength(2);
+      });
+    });
+
+    it('should use config month when no options provided', () => {
+      const result = generateMonthlySchedule(config, 2024, { planNextWorkingDays: 1 });
+
+      expect(result.schedule.month).toBe(1); // From config
+      expect(result.schedule.year).toBe(2024);
+    });
+
+    it('should use provided year parameter', () => {
+      const result = generateMonthlySchedule(config, 2023, { planNextWorkingDays: 1 });
+
+      expect(result.schedule.year).toBe(2023);
+      expect(result.schedule.month).toBe(1);
+    });
+  });
+
+  describe('employee assignment patterns', () => {
+    it('should assign different employees on consecutive days with zero rest period', () => {
+      const zeroRestConfig = {
+        ...config,
+        shifts: {
+          ...config.shifts,
+          daysFreeBetweenShifts: 0 // No rest period
+        }
+      };
+
+      const result = generateMonthlySchedule(zeroRestConfig, 2024, { planNextWorkingDays: 2 });
+
+      const day1 = result.schedule.days[0]!;
+      const day2 = result.schedule.days[1]!;
+
+      // With zero rest period, same employees can work consecutive days
+      const day1EmployeeIds = [
+        ...day1.shift.dailyShift.map(emp => emp.employee.id),
+        ...day1.shift.nightShift.map(emp => emp.employee.id)
+      ];
+
+      const day2EmployeeIds = [
+        ...day2.shift.dailyShift.map(emp => emp.employee.id),
+        ...day2.shift.nightShift.map(emp => emp.employee.id)
+      ];
+
+      // Should have overlap with zero rest period
+      const overlap = day1EmployeeIds.filter(id => day2EmployeeIds.includes(id));
+      expect(overlap.length).toBeGreaterThan(0);
+    });
+
+    it('should assign employees in sequential order on first day', () => {
+      const result = generateMonthlySchedule(config, 2024, { planNextWorkingDays: 1 });
+
+      const day = result.schedule.days[0]!;
+      
+      // First 2 employees should be on daily shift
+      expect(day.shift.dailyShift[0]?.employee.id).toBe(1); // John
+      expect(day.shift.dailyShift[1]?.employee.id).toBe(2); // Jane
+      
+      // Next 2 employees should be on night shift
+      expect(day.shift.nightShift[0]?.employee.id).toBe(3); // Bob
+      expect(day.shift.nightShift[1]?.employee.id).toBe(4); // Alice
+    });
+
+    it('should handle different employeesPerShift values', () => {
+      const customConfig = {
+        ...config,
+        shifts: {
+          ...config.shifts,
+          employeesPerShift: 1,
+          daysFreeBetweenShifts: 0 // No rest period for multiple days
+        }
+      };
+
+      const result = generateMonthlySchedule(customConfig, 2024, { planNextWorkingDays: 2 });
+
+      result.schedule.days.forEach(day => {
+        expect(day.shift.dailyShift).toHaveLength(1);
+        expect(day.shift.nightShift).toHaveLength(1);
+      });
+    });
+  });
+
+  describe('date handling', () => {
+    it('should create correct dates for January 2024', () => {
+      const result = generateMonthlySchedule(config, 2024, { planNextWorkingDays: 1 });
+
+      expect(result.schedule.days[0]?.date.getFullYear()).toBe(2024);
+      expect(result.schedule.days[0]?.date.getMonth()).toBe(0); // January is 0
+      expect(result.schedule.days[0]?.date.getDate()).toBe(1);
+    });
+
+    it('should set correct weekDay values', () => {
+      const result = generateMonthlySchedule(config, 2024, { planNextWorkingDays: 1 });
+
+      // January 1, 2024 is a Monday (1)
+      expect(result.schedule.days[0]?.weekDay).toBe(1); // Monday
+    });
+  });
+
+  describe('error handling', () => {
+    it('should throw error when not enough employees for shifts', () => {
+      const insufficientConfig = {
+        ...config,
+        employees: [
+          { id: 1, firstName: 'John', lastName: 'Doe' },
+          { id: 2, firstName: 'Jane', lastName: 'Smith' },
+        ], // Only 2 employees, need 4 for 2 per shift
+        shifts: {
+          ...config.shifts,
+          employeesPerShift: 2
+        }
+      };
+
+      expect(() => {
+        generateMonthlySchedule(insufficientConfig, 2024, { planNextWorkingDays: 1 });
+      }).toThrow('Not enough available employees for day 1');
+    });
+
+    it('should handle single day when enough employees available', () => {
+      const insufficientConfig = {
+        ...config,
+        employees: [
+          { id: 1, firstName: 'John', lastName: 'Doe' },
+          { id: 2, firstName: 'Jane', lastName: 'Smith' },
+          { id: 3, firstName: 'Bob', lastName: 'Johnson' },
+          { id: 4, firstName: 'Alice', lastName: 'Brown' },
+        ], // Exactly 4 employees for 2 per shift
+        shifts: {
+          ...config.shifts,
+          employeesPerShift: 2
+        }
+      };
+
+      const result = generateMonthlySchedule(insufficientConfig, 2024, { planNextWorkingDays: 1 });
+      
+      expect(result.schedule.days).toHaveLength(1);
+      expect(result.errors).toHaveLength(0);
+    });
+  });
+
+  describe('edge cases', () => {
+    it('should handle zero planNextWorkingDays', () => {
+      const result = generateMonthlySchedule(config, 2024, { planNextWorkingDays: 0 });
+
+      expect(result.schedule.days).toHaveLength(0);
+      expect(result.errors).toHaveLength(0);
+      expect(result.warnings).toHaveLength(0);
+    });
+
+    it('should handle different months correctly', () => {
+      const febConfig = {
+        ...config,
+        schedule: {
+          ...config.schedule,
+          month: 2 // February
+        }
+      };
+
+      const result = generateMonthlySchedule(febConfig, 2024, { planNextWorkingDays: 1 });
+
+      expect(result.schedule.month).toBe(2);
+      expect(result.schedule.days[0]?.date.getMonth()).toBe(1); // February is 1
+    });
+
+    it('should maintain employee object references in shifts', () => {
+      const result = generateMonthlySchedule(config, 2024, { planNextWorkingDays: 1 });
+
+      const day = result.schedule.days[0]!;
+      
+      // Check that employee objects are properly referenced
+      expect(day.shift.dailyShift[0]?.employee.firstName).toBe('John');
+      expect(day.shift.dailyShift[0]?.employee.lastName).toBe('Doe');
+      expect(day.shift.dailyShift[0]?.employee.id).toBe(1);
+    });
+  });
+
+  describe('integration with createPlannerOptions', () => {
+    it('should use createPlannerOptions internally', () => {
+      const result = generateMonthlySchedule(config, 2024, { planNextWorkingDays: 1 });
+
+      // The function should work with the options created by createPlannerOptions
+      expect(result.schedule.days).toHaveLength(1);
+      expect(result.errors).toHaveLength(0);
+    });
+
+    it('should handle options with only planNextWorkingDays specified', () => {
+      const result = generateMonthlySchedule(config, 2024, { planNextWorkingDays: 1 });
+
+      expect(result.schedule.days).toHaveLength(1);
+      expect(result.schedule.year).toBe(2024);
+      expect(result.schedule.month).toBe(1); // From config
     });
   });
 });

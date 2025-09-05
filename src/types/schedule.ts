@@ -28,17 +28,3 @@ export interface ScheduleGenerationResult {
   warnings: string[];
   errors: string[];
 }
-
-export interface PlannerOptions {
-  employeesPerShift?: number;
-  rotateShifts?: boolean;
-  customRotation?: Employee[][];
-}
-
-export function createPlannerOptions(options: PlannerOptions = {}): Required<PlannerOptions> {
-  return {
-    employeesPerShift: options.employeesPerShift ?? 4,
-    rotateShifts: options.rotateShifts ?? true,
-    customRotation: options.customRotation ?? [],
-  };
-}
