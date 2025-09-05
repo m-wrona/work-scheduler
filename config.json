@@ -118,6 +118,7 @@
   },
   "schedule": {
     "timezone": "UTC",
+    "year": 2025,
     "month": 9
   }
 }
