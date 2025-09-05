@@ -3,6 +3,7 @@ import type { WorkSchedulerConfig } from './src/types/config';
 import { isValidConfig } from './src/types/config';
 import { calculateMonthlyWorkingHours, getCurrentYear } from './src/scheduler/calendar';
 import { generateMonthlySchedule } from './src/scheduler/planner';
+import { Table } from 'console-table-printer';
 
 const typedConfig: WorkSchedulerConfig = config;
 
@@ -63,7 +64,45 @@ const scheduleResult = generateMonthlySchedule(typedConfig, {
 
 console.log(`Generated schedule for ${scheduleResult.schedule.month}/${scheduleResult.schedule.year}`);
 
+// Print schedule as table
+console.log('\n📅 Monthly Schedule:');
+console.log('===================');
 
+const scheduleTable = new Table({
+  title: `Work Schedule - ${scheduleResult.schedule.month}/${scheduleResult.schedule.year}`,
+  columns: [
+    { name: 'date', title: 'Date', alignment: 'left' },
+    { name: 'day', title: 'Day', alignment: 'left' },
+    { name: 'dailyShift', title: 'Daily Shift', alignment: 'left' },
+    { name: 'nightShift', title: 'Night Shift', alignment: 'left' }
+  ]
+});
+
+scheduleResult.schedule.days.forEach(day => {
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const dayName = dayNames[day.weekDay];
+  const dateStr = day.date.toLocaleDateString('en-US', { 
+    month: '2-digit', 
+    day: '2-digit' 
+  });
+  
+  const dailyShiftNames = day.shift.dailyShift
+    .map(emp => `${emp.employee.firstName} ${emp.employee.lastName}`)
+    .join(', ');
+    
+  const nightShiftNames = day.shift.nightShift
+    .map(emp => `${emp.employee.firstName} ${emp.employee.lastName}`)
+    .join(', ');
+
+  scheduleTable.addRow({
+    date: dateStr,
+    day: dayName,
+    dailyShift: dailyShiftNames || 'No one assigned',
+    nightShift: nightShiftNames || 'No one assigned'
+  });
+});
+
+scheduleTable.printTable();
 
 if (scheduleResult.warnings.length > 0) {
   console.log('\nWarnings:');
@@ -71,7 +110,7 @@ if (scheduleResult.warnings.length > 0) {
 }
 
 if (scheduleResult.errors.length > 0) {
-  console.log('\Errors:');
+  console.log('\nErrors:');
   scheduleResult.errors.forEach(err => console.log(`- ${err}`));
 }
 
