@@ -313,17 +313,18 @@ describe('generateMonthlySchedule', () => {
       },
       schedule: {
         timezone: 'UTC',
-        month: 1 // January
+        year: 2025,
+        month: 9 
       }
     };
   });
 
   describe('basic functionality', () => {
     it('should generate schedule for 1 day with small planNextWorkingDays', () => {
-      const result = generateMonthlySchedule(config, 2024, { planNextWorkingDays: 1 });
+      const result = generateMonthlySchedule(config, { planNextWorkingDays: 1 });
 
-      expect(result.schedule.year).toBe(2024);
-      expect(result.schedule.month).toBe(1);
+      expect(result.schedule.year).toBe(2025);
+      expect(result.schedule.month).toBe(9);
       expect(result.schedule.days).toHaveLength(1);
       expect(result.errors).toHaveLength(0);
       expect(result.warnings).toHaveLength(0);
@@ -344,7 +345,7 @@ describe('generateMonthlySchedule', () => {
         }
       };
 
-      const result = generateMonthlySchedule(zeroRestConfig, 2024, { planNextWorkingDays: 2 });
+      const result = generateMonthlySchedule(zeroRestConfig, { planNextWorkingDays: 2 });
 
       expect(result.schedule.days).toHaveLength(2);
       expect(result.errors).toHaveLength(0);
@@ -358,19 +359,6 @@ describe('generateMonthlySchedule', () => {
       });
     });
 
-    it('should use config month when no options provided', () => {
-      const result = generateMonthlySchedule(config, 2024, { planNextWorkingDays: 1 });
-
-      expect(result.schedule.month).toBe(1); // From config
-      expect(result.schedule.year).toBe(2024);
-    });
-
-    it('should use provided year parameter', () => {
-      const result = generateMonthlySchedule(config, 2023, { planNextWorkingDays: 1 });
-
-      expect(result.schedule.year).toBe(2023);
-      expect(result.schedule.month).toBe(1);
-    });
   });
 
   describe('employee assignment patterns', () => {
@@ -383,7 +371,7 @@ describe('generateMonthlySchedule', () => {
         }
       };
 
-      const result = generateMonthlySchedule(zeroRestConfig, 2024, { planNextWorkingDays: 2 });
+      const result = generateMonthlySchedule(zeroRestConfig, { planNextWorkingDays: 2 });
 
       const day1 = result.schedule.days[0]!;
       const day2 = result.schedule.days[1]!;
@@ -405,7 +393,7 @@ describe('generateMonthlySchedule', () => {
     });
 
     it('should assign employees in sequential order on first day', () => {
-      const result = generateMonthlySchedule(config, 2024, { planNextWorkingDays: 1 });
+      const result = generateMonthlySchedule(config, { planNextWorkingDays: 1 });
 
       const day = result.schedule.days[0]!;
       
@@ -428,7 +416,7 @@ describe('generateMonthlySchedule', () => {
         }
       };
 
-      const result = generateMonthlySchedule(customConfig, 2024, { planNextWorkingDays: 2 });
+      const result = generateMonthlySchedule(customConfig, { planNextWorkingDays: 2 });
 
       result.schedule.days.forEach(day => {
         expect(day.shift.dailyShift).toHaveLength(1);
@@ -438,16 +426,16 @@ describe('generateMonthlySchedule', () => {
   });
 
   describe('date handling', () => {
-    it('should create correct dates for January 2024', () => {
-      const result = generateMonthlySchedule(config, 2024, { planNextWorkingDays: 1 });
+    it('should create correct dates', () => {
+      const result = generateMonthlySchedule(config,  { planNextWorkingDays: 1 });
 
-      expect(result.schedule.days[0]?.date.getFullYear()).toBe(2024);
-      expect(result.schedule.days[0]?.date.getMonth()).toBe(0); // January is 0
+      expect(result.schedule.days[0]?.date.getFullYear()).toBe(2025);
+      expect(result.schedule.days[0]?.date.getMonth()).toBe(8); 
       expect(result.schedule.days[0]?.date.getDate()).toBe(1);
     });
 
     it('should set correct weekDay values', () => {
-      const result = generateMonthlySchedule(config, 2024, { planNextWorkingDays: 1 });
+      const result = generateMonthlySchedule(config, { planNextWorkingDays: 1 });
 
       // January 1, 2024 is a Monday (1)
       expect(result.schedule.days[0]?.weekDay).toBe(1); // Monday
@@ -469,7 +457,7 @@ describe('generateMonthlySchedule', () => {
       };
 
       expect(() => {
-        generateMonthlySchedule(insufficientConfig, 2024, { planNextWorkingDays: 1 });
+        generateMonthlySchedule(insufficientConfig, { planNextWorkingDays: 1 });
       }).toThrow('Not enough available employees for day 1');
     });
 
@@ -488,7 +476,7 @@ describe('generateMonthlySchedule', () => {
         }
       };
 
-      const result = generateMonthlySchedule(insufficientConfig, 2024, { planNextWorkingDays: 1 });
+      const result = generateMonthlySchedule(insufficientConfig, { planNextWorkingDays: 1 });
       
       expect(result.schedule.days).toHaveLength(1);
       expect(result.errors).toHaveLength(0);
@@ -497,7 +485,7 @@ describe('generateMonthlySchedule', () => {
 
   describe('edge cases', () => {
     it('should handle zero planNextWorkingDays', () => {
-      const result = generateMonthlySchedule(config, 2024, { planNextWorkingDays: 0 });
+      const result = generateMonthlySchedule(config, { planNextWorkingDays: 0 });
 
       expect(result.schedule.days).toHaveLength(0);
       expect(result.errors).toHaveLength(0);
@@ -513,14 +501,14 @@ describe('generateMonthlySchedule', () => {
         }
       };
 
-      const result = generateMonthlySchedule(febConfig, 2024, { planNextWorkingDays: 1 });
+      const result = generateMonthlySchedule(febConfig, { planNextWorkingDays: 1 });
 
       expect(result.schedule.month).toBe(2);
       expect(result.schedule.days[0]?.date.getMonth()).toBe(1); // February is 1
     });
 
     it('should maintain employee object references in shifts', () => {
-      const result = generateMonthlySchedule(config, 2024, { planNextWorkingDays: 1 });
+      const result = generateMonthlySchedule(config, { planNextWorkingDays: 1 });
 
       const day = result.schedule.days[0]!;
       
@@ -533,7 +521,7 @@ describe('generateMonthlySchedule', () => {
 
   describe('integration with createPlannerOptions', () => {
     it('should use createPlannerOptions internally', () => {
-      const result = generateMonthlySchedule(config, 2024, { planNextWorkingDays: 1 });
+      const result = generateMonthlySchedule(config, { planNextWorkingDays: 1 });
 
       // The function should work with the options created by createPlannerOptions
       expect(result.schedule.days).toHaveLength(1);
@@ -541,11 +529,11 @@ describe('generateMonthlySchedule', () => {
     });
 
     it('should handle options with only planNextWorkingDays specified', () => {
-      const result = generateMonthlySchedule(config, 2024, { planNextWorkingDays: 1 });
+      const result = generateMonthlySchedule(config, { planNextWorkingDays: 1 });
 
       expect(result.schedule.days).toHaveLength(1);
-      expect(result.schedule.year).toBe(2024);
-      expect(result.schedule.month).toBe(1); // From config
+      expect(result.schedule.year).toBe(2025);
+      expect(result.schedule.month).toBe(9); 
     });
   });
 });

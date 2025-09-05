@@ -29,9 +29,9 @@ export function createPlannerOptions(options: PlannerOptions = {}): Required<Pla
 
 export function generateMonthlySchedule(
   config: WorkSchedulerConfig,
-  year: number = new Date().getFullYear(),
   options: PlannerOptions = {}
 ): ScheduleGenerationResult {
+  const year = config.schedule.year;
   const month = config.schedule.month;
   const days: ScheduleDay[] = [];
   const plannerOptions = createPlannerOptions(options);

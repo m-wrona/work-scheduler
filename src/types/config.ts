@@ -18,6 +18,7 @@ export interface Shifts {
 
 export interface Schedule {
   timezone: string;
+  year: number;
   month: number;
 }
 
@@ -48,6 +49,7 @@ export function isValidConfig(config: any): config is WorkSchedulerConfig {
     typeof config.shifts.daysFreeBetweenShifts === 'number' &&
     config.schedule &&
     typeof config.schedule.timezone === 'string' &&
+    typeof config.schedule.year === 'number' &&
     typeof config.schedule.month === 'number'
   );
 }
