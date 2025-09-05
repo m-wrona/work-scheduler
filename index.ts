@@ -1,7 +1,7 @@
 import config from './config.json';
 import type { WorkSchedulerConfig } from './src/types/config';
 import { isValidConfig } from './src/types/config';
-import { calculateMonthlyWorkingHours, getCurrentYear } from './src/scheduler/calendar';
+import { createMonthSchedule, getCurrentYear } from './src/scheduler/calendar';
 import { generateMonthlySchedule } from './src/scheduler/planner';
 import { Table } from 'console-table-printer';
 
@@ -35,7 +35,7 @@ console.log(`- Month: ${typedConfig.schedule.month}`);
 
 // Calculate monthly schedule
 const currentYear = getCurrentYear();
-const monthSchedule = calculateMonthlyWorkingHours(
+const monthSchedule = createMonthSchedule(
   typedConfig.schedule.month,
   currentYear,
   typedConfig.workingHours.defaultDailyHours,

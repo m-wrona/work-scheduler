@@ -3,7 +3,8 @@ import type { Employee } from './config';
 export interface EmployeeShifts {
   employee: Employee;
   shifts?: DayShift[];
-  nextShiftDate?: Date;
+  nextDayShiftDate?: Date;
+  nextNightShiftDate?: Date;
 }
 
 export interface DayShift {
