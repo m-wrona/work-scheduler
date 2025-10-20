@@ -4,6 +4,8 @@ import { isValidConfig } from './src/types/config';
 import { createMonthSchedule, getCurrentYear } from './src/scheduler/calendar';
 import { generateMonthlySchedule } from './src/scheduler/planner';
 import { Table } from 'console-table-printer';
+import type { ScheduleGenerationResult } from './src/types/schedule';
+import { printHTMLScheduleTable } from './src/html-generator';
 
 const typedConfig: WorkSchedulerConfig = config;
 
@@ -105,6 +107,9 @@ scheduleResult.schedule.days.forEach(day => {
 });
 
 scheduleTable.printTable();
+
+// Print HTML schedule table to file
+printHTMLScheduleTable(scheduleResult, typedConfig);
 
 if (scheduleResult.warnings.length > 0) {
   console.log('\nWarnings:');
