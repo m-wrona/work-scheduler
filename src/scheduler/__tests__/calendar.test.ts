@@ -27,7 +27,20 @@ describe('createMonthSchedule', () => {
       expect(result.totalDays).toBe(31);
       expect(result.workingDays).toBe(23); // 5 weeks * 5 days + 3 extra working days
       expect(result.workingDaysList).toHaveLength(23);
+      expect(result.holidays).toHaveLength(0);
     });
+
+    it('should calculate correct working days for January 2024 with holidays', () => {
+      const holidays = [1, 2];
+      const result = createMonthSchedule(1, 2024, 8, 12, holidays);
+      
+      // January 2024 has 31 days, starts on Monday
+      expect(result.totalDays).toBe(31);
+      expect(result.workingDays).toBe(21); // 5 weeks * 5 days + 3 extra working days
+      expect(result.workingDaysList).toHaveLength(21);
+      expect(result.holidays).toHaveLength(2);
+    });
+
 
     it('should calculate correct working days for February 2024 (leap year)', () => {
       const result = createMonthSchedule(2, 2024);
@@ -46,6 +59,7 @@ describe('createMonthSchedule', () => {
       expect(result.workingDays).toBe(20); // 4 weeks * 5 days
       expect(result.workingDaysList).toHaveLength(20);
     });
+    
   });
 
   describe('working days filtering', () => {
