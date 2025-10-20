@@ -10,6 +10,7 @@ export interface MonthSchedule {
   totalWorkingHours: number;
   shiftsNumber: number;
   workingDaysList: Date[];
+  holidays: Date[];
 }
 
 export function createMonthSchedule(
@@ -17,6 +18,7 @@ export function createMonthSchedule(
   year: number,
   dailyHours: number = 8,
   shiftLength: number = 12,
+  holidays: number[] = [],
 ): MonthSchedule {
   const lastDay = new Date(year, month, 0); // 0 gives us the last day of the previous month
 
@@ -29,6 +31,9 @@ export function createMonthSchedule(
     const currentDate = new Date(year, month - 1, day);
     const dayOfWeek = currentDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
 
+    if (holidays.includes(day)) {
+      continue;
+    }
     // Check if it's a working day (Monday = 1, Tuesday = 2, ..., Friday = 5)
     if (dayOfWeek >= 1 && dayOfWeek <= 5) {
       workingDaysCount++;
@@ -45,7 +50,8 @@ export function createMonthSchedule(
     workingDays: workingDaysCount,
     totalWorkingHours: totalWorkingHours,
     shiftsNumber: Math.floor(totalWorkingHours / shiftLength),
-    workingDaysList: workingDays
+    workingDaysList: workingDays,
+    holidays: holidays.map(day => new Date(year, month - 1, day)),
   };
 }
 

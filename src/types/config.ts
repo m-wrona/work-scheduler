@@ -14,12 +14,14 @@ export interface Shifts {
   units: string;
   employeesPerShift: number;
   daysFreeBetweenShifts: number;
+  weekendsFreeInMonth: number;
 }
 
 export interface Schedule {
   timezone: string;
   year: number;
   month: number;
+  holidays: number[];
 }
 
 export interface WorkSchedulerConfig {
@@ -47,9 +49,16 @@ export function isValidConfig(config: any): config is WorkSchedulerConfig {
     typeof config.shifts.units === 'string' &&
     typeof config.shifts.employeesPerShift === 'number' &&
     typeof config.shifts.daysFreeBetweenShifts === 'number' &&
+    typeof config.shifts.weekendsFreeInMonth === 'number' &&
     config.schedule &&
     typeof config.schedule.timezone === 'string' &&
     typeof config.schedule.year === 'number' &&
-    typeof config.schedule.month === 'number'
+    typeof config.schedule.month === 'number' &&
+    typeof config.schedule.holidays === 'object' &&
+    config.schedule.holidays.every((holiday: number) => typeof holiday === 'number')
   );
+}
+
+export function isValidHoliday(holiday: number): boolean {
+  return typeof holiday === 'number' && holiday >= 1 && holiday <= 31;
 }

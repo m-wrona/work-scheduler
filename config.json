@@ -107,18 +107,20 @@
     }
   ],
   "workingHours": {
-    "defaultDailyHours": 7.35,
+    "defaultDailyHours": 7.58,
     "units": "hours"
   },
   "shifts": {
     "defaultShiftLength": 12,
     "units": "hours",
     "employeesPerShift": 4,
-    "daysFreeBetweenShifts": 1
+    "daysFreeBetweenShifts": 1,
+    "weekendsFreeInMonth": 1
   },
   "schedule": {
     "timezone": "UTC",
     "year": 2025,
-    "month": 9
+    "month": 11,
+    "holidays": [ 10, 11 ]
   }
 }

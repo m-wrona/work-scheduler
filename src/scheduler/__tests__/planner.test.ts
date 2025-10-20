@@ -398,12 +398,14 @@ describe('generateMonthlySchedule', () => {
         defaultShiftLength: 8,
         units: 'hours',
         employeesPerShift: 2,
-        daysFreeBetweenShifts: 1
+        daysFreeBetweenShifts: 1,
+        weekendsFreeInMonth: 1,
       },
       schedule: {
         timezone: 'UTC',
         year: 2025,
-        month: 9
+        month: 9,
+        holidays: [],
       }
     };
   });
