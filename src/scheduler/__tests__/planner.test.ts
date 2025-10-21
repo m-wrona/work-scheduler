@@ -399,6 +399,7 @@ describe('generateMonthlySchedule', () => {
         units: 'hours',
         employeesPerShift: 2,
         daysFreeBetweenShifts: 1,
+        maxDaysFreeBetweenShifts: 4,
         weekendsFreeInMonth: 1,
       },
       schedule: {
