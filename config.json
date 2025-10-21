@@ -115,6 +115,7 @@
     "units": "hours",
     "employeesPerShift": 4,
     "daysFreeBetweenShifts": 1,
+    "maxDaysFreeBetweenShifts": 4,
     "weekendsFreeInMonth": 1
   },
   "schedule": {

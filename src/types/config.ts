@@ -14,6 +14,7 @@ export interface Shifts {
   units: string;
   employeesPerShift: number;
   daysFreeBetweenShifts: number;
+  maxDaysFreeBetweenShifts: number;
   weekendsFreeInMonth: number;
 }
 
@@ -49,6 +50,7 @@ export function isValidConfig(config: any): config is WorkSchedulerConfig {
     typeof config.shifts.units === 'string' &&
     typeof config.shifts.employeesPerShift === 'number' &&
     typeof config.shifts.daysFreeBetweenShifts === 'number' &&
+    typeof config.shifts.maxDaysFreeBetweenShifts === 'number' &&
     typeof config.shifts.weekendsFreeInMonth === 'number' &&
     config.schedule &&
     typeof config.schedule.timezone === 'string' &&
