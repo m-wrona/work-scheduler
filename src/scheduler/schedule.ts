@@ -31,7 +31,7 @@ export function nextShift(
     dayIdx: number,
     prevShifts: Shift[],
     prevEmployees: Map<string, EmployeeShift>,
-    rule: Rule[] = Rules,
+    rules: Rule[] = Rules,
     maxTries: number = 10,
 ): Shift[] | null {
     const employees: Map<string, EmployeeShift> = new Map(
@@ -41,6 +41,28 @@ export function nextShift(
                 newEmployeeShift(value.employee)
             ])
     );
+
+    let employeesShift: EmployeeShift[] | null = null;
+    planning: for (let i = 0; i < maxTries; i++) {
+        employeesShift = createShift(
+            schedule.workingDaysList[dayIdx]!,
+            employees,
+            cfg,
+        )
+
+        for (const employee of employeesShift) {
+            for (const rule of rules) {
+                if (!rule(employee, cfg, schedule)) {
+                    continue planning;
+                }
+            }
+        }
+    }
+
+    if (employeesShift!.length != cfg.shifts.employeesPerShift) {
+        // not able to plan a shift for given state 
+        return null;
+    }
 
     return prevShifts;
 }
