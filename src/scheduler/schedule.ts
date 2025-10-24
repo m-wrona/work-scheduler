@@ -49,7 +49,6 @@ export function nextShift(
             ])
     );
 
-    let employeesShift: EmployeeShift[] | null = null;
     planning: for (let i = 0; i < maxTries; i++) {
         const employeesShift = createShift(
             date,
