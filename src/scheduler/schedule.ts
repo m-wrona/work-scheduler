@@ -30,19 +30,24 @@ export function nextShift(
     schedule: MonthSchedule,
     dayIdx: number,
     prevShifts: Shift[],
-    prevEmployees: Map<string,EmployeeShift>,
+    prevEmployees: Map<string, EmployeeShift>,
     rule: Rule[] = Rules,
     maxTries: number = 10,
 ): Shift[] | null {
-    const employees: Map<string,EmployeeShift> = 
-        prevEmployees.values().map(e => (e.employee.id, newEmployeeShift(e.employee)));
+    const employees: Map<string, EmployeeShift> = new Map(
+        [...prevEmployees.entries()].
+            map(([key, value]) => [
+                key,
+                newEmployeeShift(value.employee)
+            ])
+    );
 
     return prevShifts;
 }
 
 export function createShift(
     date: Date,
-    employees: Map<string,EmployeeShift>,
+    employees: Map<string, EmployeeShift>,
     cfg: WorkSchedulerConfig,
 ): EmployeeShift[] {
 
