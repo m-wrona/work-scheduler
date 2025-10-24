@@ -3,7 +3,7 @@ import type { MonthSchedule } from "./calendar";
 import type { EmployeeShift, Schedule, Shift } from "./model";
 import type { Rule } from "./rules";
 import { Rules } from "./rules";
-import { newEmployeeShift, cloneShift } from "./model";
+import { newEmployeeShift, cloneShift, cloneEmployeeShift } from "./model";
 
 
 export function createSchedule(
@@ -103,20 +103,21 @@ export function createShift(
             break;
         }
 
-        if (employee.nextNotSoonerThan === null || employee.nextNotSoonerThan >= date) {
-            employee.lastDate = date;
-            employee.nextNotSoonerThan = new Date(
+        if (employee.nextNotSoonerThan === null || date >= employee.nextNotSoonerThan) {
+            const e = cloneEmployeeShift(employee);
+            e.lastDate = date;
+            e.nextNotSoonerThan = new Date(
                 date.getFullYear(),
                 date.getMonth(),
-                date.getDate() + cfg.shifts.daysFreeBetweenShifts,
+                date.getDate() + cfg.shifts.daysFreeBetweenShifts + 1,
             );
-            employee.nextNotLaterThan = new Date(
+            e.nextNotLaterThan = new Date(
                 date.getFullYear(),
                 date.getMonth(),
                 date.getDate() + cfg.shifts.maxDaysFreeBetweenShifts,
             );
-            employee.hours += cfg.shifts.defaultShiftLength;
-            shift.push(employee);
+            e.hours += cfg.shifts.defaultShiftLength;
+            shift.push(e);
         }
 
 
