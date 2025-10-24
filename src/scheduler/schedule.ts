@@ -115,6 +115,7 @@ export function createShift(
                 date.getMonth(),
                 date.getDate() + cfg.shifts.maxDaysFreeBetweenShifts,
             );
+            employee.hours += cfg.shifts.defaultShiftLength;
             shift.push(employee);
         }
 
