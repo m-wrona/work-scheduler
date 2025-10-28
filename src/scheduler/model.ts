@@ -20,14 +20,6 @@ export interface Schedule {
     nights: Map<Date, Shift>;
 }
 
-export function cloneShift(shift: Shift): Shift {
-    return {
-        date: shift.date,
-        employees: shift.employees.map(e => cloneEmployeeShift(e)),
-        night: shift.night,
-    };
-}
-
 export function cloneEmployeesShift(employeeShift: EmployeeShift[]): EmployeeShift[] {
     return employeeShift.map(e => cloneEmployeeShift(e));
 }

@@ -3,7 +3,7 @@ import type { MonthSchedule } from "./calendar";
 import type { EmployeeShift, Schedule, Shift } from "./model";
 import type { Rule } from "./rules";
 import { Rules } from "./rules";
-import { newEmployeeShift, cloneShift, cloneEmployeeShift } from "./model";
+import { newEmployeeShift, cloneEmployeeShift } from "./model";
 
 
 export function createSchedule(
@@ -30,7 +30,7 @@ export function nextShift(
     schedule: MonthSchedule,
     dayIdx: number,
     prevShifts: Shift[],
-    prevEmployees: Map<string, EmployeeShift>,
+    employeeShifts: Map<string, EmployeeShift>,
     rules: Rule[] = Rules,
     night: boolean = false,
     maxTries: number = 10,
@@ -40,38 +40,41 @@ export function nextShift(
     }
 
     const date = schedule.workingDaysList[dayIdx]!
-
-    const employees: Map<string, EmployeeShift> = new Map(
-        [...prevEmployees.entries()].
+    const nextEmployeeShifts: Map<string, EmployeeShift> = new Map(
+        [...employeeShifts.entries()].
             map(([key, value]) => [
                 key,
-                newEmployeeShift(value.employee)
+                cloneEmployeeShift(value)
             ])
     );
 
     planning: for (let i = 0; i < maxTries; i++) {
-        const employeesShift = createShift(
+        const availEmployees = createShift(
             date,
-            employees,
+            employeeShifts,
             cfg,
         )
 
-        if (employeesShift!.length != cfg.shifts.employeesPerShift) {
+        if (availEmployees!.length != cfg.shifts.employeesPerShift) {
             // not able to plan a shift for given state 
             break;
         }
 
-        for (const employee of employeesShift) {
+        for (const e of availEmployees) {
             for (const rule of rules) {
-                if (!rule(employee, cfg, schedule)) {
+                if (!rule(e, cfg, schedule)) {
                     continue planning;
                 }
             }
         }
 
+        for (const e of availEmployees) {
+            nextEmployeeShifts.set(e.employee.id.toString(), e);
+        }
+
         const shift: Shift = {
             date: date,
-            employees: employeesShift,
+            employees: availEmployees,
             night: night,
         };
 
@@ -80,7 +83,7 @@ export function nextShift(
             schedule,
             dayIdx + 1,
             [...prevShifts, shift],
-            employees,
+            nextEmployeeShifts,
             rules,
             night,
             maxTries,
@@ -92,19 +95,19 @@ export function nextShift(
 
 export function createShift(
     date: Date,
-    employees: Map<string, EmployeeShift>,
+    employeeShifts: Map<string, EmployeeShift>,
     cfg: WorkSchedulerConfig,
 ): EmployeeShift[] {
 
     var shift: EmployeeShift[] = [];
 
-    for (const employee of employees.values()) {
+    for (const employeeShift of employeeShifts.values()) {
         if (shift.length >= cfg.shifts.employeesPerShift) {
             break;
         }
 
-        if (employee.nextNotSoonerThan === null || date >= employee.nextNotSoonerThan) {
-            const e = cloneEmployeeShift(employee);
+        if (employeeShift.nextNotSoonerThan === null || date >= employeeShift.nextNotSoonerThan) {
+            const e = cloneEmployeeShift(employeeShift);
             e.lastDate = date;
             e.nextNotSoonerThan = new Date(
                 date.getFullYear(),
@@ -117,9 +120,8 @@ export function createShift(
                 date.getDate() + cfg.shifts.maxDaysFreeBetweenShifts,
             );
             e.hours += cfg.shifts.defaultShiftLength;
-            shift.push(e);
+            shift.push(employeeShift);
         }
-
 
     }
 
