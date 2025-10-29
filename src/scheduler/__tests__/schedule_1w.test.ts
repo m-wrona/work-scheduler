@@ -152,6 +152,122 @@ describe('nextShift', () => {
             expect(result![dayIdx]?.employees[3]?.employee.id).toBe(8);
         });
 
+        it('should add another shift in a week after min free days', () => {
+            prevShifts = [
+                {
+                    date: new Date(2025, 9, 1),
+                    employees: [
+                        {
+                            employee: employees.get('1')!.employee,
+                            lastDate: new Date(2025, 9, 1),
+                            nextNotSoonerThan: new Date(2025, 9, 3),
+                            nextNotLaterThan: new Date(2025, 9, 5),
+                            hours: 7.58,
+                        },
+                        {
+                            employee: employees.get('2')!.employee,
+                            lastDate: new Date(2025, 9, 1),
+                            nextNotSoonerThan: new Date(2025, 9, 3),
+                            nextNotLaterThan: new Date(2025, 9, 5),
+                            hours: 7.58,
+                        },
+                        {
+                            employee: employees.get('3')!.employee,
+                            lastDate: new Date(2025, 9, 1),
+                            nextNotSoonerThan: new Date(2025, 9, 3),
+                            nextNotLaterThan: new Date(2025, 9, 5),
+                            hours: 7.58,
+                        },
+                        {
+                            employee: employees.get('4')!.employee,
+                            lastDate: new Date(2025, 9, 1),
+                            nextNotSoonerThan: new Date(2025, 9, 3),
+                            nextNotLaterThan: new Date(2025, 9, 5),
+                            hours: 7.58,
+                        },
+                    ],
+                    night: false,
+                },
+            ]
+
+            for (const e of prevShifts[0]!.employees) {
+                employees.set(e.employee.id.toString(), e);
+            }
+
+            const dayIdx = 2;
+            const shiftIdx = 1;
+            const result = nextShift(config, schedule, dayIdx, prevShifts, employees, rules, false, 1);
+
+            expect(result).toHaveLength(6);
+
+            expect(result![shiftIdx]?.date).toEqual(new Date(2025, 9, 3));
+            expect(result![shiftIdx]?.employees).toHaveLength(4);
+            expect(result![shiftIdx]?.night).toBe(false);
+
+            expect(result![shiftIdx]?.employees[0]?.employee.id).toBe(1);
+            expect(result![shiftIdx]?.employees[1]?.employee.id).toBe(2);
+            expect(result![shiftIdx]?.employees[2]?.employee.id).toBe(3);
+            expect(result![shiftIdx]?.employees[3]?.employee.id).toBe(4);
+        });
+
+        it('should add another shift in a week after max free days', () => {
+            prevShifts = [
+                {
+                    date: new Date(2025, 9, 1),
+                    employees: [
+                        {
+                            employee: employees.get('1')!.employee,
+                            lastDate: new Date(2025, 9, 1),
+                            nextNotSoonerThan: new Date(2025, 9, 3),
+                            nextNotLaterThan: new Date(2025, 9, 5),
+                            hours: 7.58,
+                        },
+                        {
+                            employee: employees.get('2')!.employee,
+                            lastDate: new Date(2025, 9, 1),
+                            nextNotSoonerThan: new Date(2025, 9, 3),
+                            nextNotLaterThan: new Date(2025, 9, 5),
+                            hours: 7.58,
+                        },
+                        {
+                            employee: employees.get('3')!.employee,
+                            lastDate: new Date(2025, 9, 1),
+                            nextNotSoonerThan: new Date(2025, 9, 3),
+                            nextNotLaterThan: new Date(2025, 9, 5),
+                            hours: 7.58,
+                        },
+                        {
+                            employee: employees.get('4')!.employee,
+                            lastDate: new Date(2025, 9, 1),
+                            nextNotSoonerThan: new Date(2025, 9, 3),
+                            nextNotLaterThan: new Date(2025, 9, 5),
+                            hours: 7.58,
+                        },
+                    ],
+                    night: false,
+                },
+            ]
+
+            for (const e of prevShifts[0]!.employees) {
+                employees.set(e.employee.id.toString(), e);
+            }
+
+            const dayIdx = 4;
+            const shiftIdx = 1;
+            const result = nextShift(config, schedule, dayIdx, prevShifts, employees, rules, false, 1);
+
+            expect(result).toHaveLength(4);
+
+            expect(result![shiftIdx]?.date).toEqual(new Date(2025, 9, 5));
+            expect(result![shiftIdx]?.employees).toHaveLength(4);
+            expect(result![shiftIdx]?.night).toBe(false);
+
+            expect(result![shiftIdx]?.employees[0]?.employee.id).toBe(1);
+            expect(result![shiftIdx]?.employees[1]?.employee.id).toBe(2);
+            expect(result![shiftIdx]?.employees[2]?.employee.id).toBe(3);
+            expect(result![shiftIdx]?.employees[3]?.employee.id).toBe(4);
+        });
+
     });
 
 });
