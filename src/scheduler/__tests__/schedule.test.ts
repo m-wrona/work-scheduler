@@ -29,9 +29,53 @@ describe('sortEmployeeShifts', () => {
             const result = sortEmployeeShifts(employeeShifts, false);
 
             expect(result).toHaveLength(3);
-            expect(result).toContain(shift1);
-            expect(result).toContain(shift2);
-            expect(result).toContain(shift3);
+            expect(result[0]).toBe(shift1);
+            expect(result[1]).toBe(shift2);
+            expect(result[2]).toBe(shift3);
+        });
+
+        it('employees with nextNotLaterThan should be sorted first', () => {
+            const shift1 = newEmployeeShift(employee1);
+            shift1.nextNotLaterThan = new Date(2025, 0, 10);
+            const shift2 = newEmployeeShift(employee2);
+            shift2.nextNotLaterThan = new Date(2025, 0, 5);
+            const shift3 = newEmployeeShift(employee3);
+
+            const employeeShifts = new Map<string, EmployeeShift>([
+                ['1', shift1],
+                ['2', shift2],
+                ['3', shift3],
+            ]);
+
+            const result = sortEmployeeShifts(employeeShifts, false);
+
+            expect(result).toHaveLength(3);
+            expect(result[0]).toBe(shift2);
+            expect(result[1]).toBe(shift1);
+            expect(result[2]).toBe(shift3);
+        });
+
+        it('sort by nextNotLaterThan first then by nextNotSoonerThan', () => {
+            const shift1 = newEmployeeShift(employee1);
+            shift1.nextNotSoonerThan = new Date(2025, 0, 7);
+            shift1.nextNotLaterThan = new Date(2025, 0, 10);
+            const shift2 = newEmployeeShift(employee2);
+            shift2.nextNotSoonerThan = new Date(2025, 0, 3);
+            shift2.nextNotLaterThan = new Date(2025, 0, 5);
+            const shift3 = newEmployeeShift(employee3);
+
+            const employeeShifts = new Map<string, EmployeeShift>([
+                ['1', shift1],
+                ['2', shift2],
+                ['3', shift3],
+            ]);
+
+            const result = sortEmployeeShifts(employeeShifts, false);
+
+            expect(result).toHaveLength(3);
+            expect(result[0]).toBe(shift2);
+            expect(result[1]).toBe(shift1);
+            expect(result[2]).toBe(shift3);
         });
 
     });

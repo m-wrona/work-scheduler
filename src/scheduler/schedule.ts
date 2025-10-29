@@ -49,21 +49,21 @@ export function nextShift(
     );
 
     planning: for (let i = 0; i < maxTries; i++) {
-        const availEmployees = createShift(
+        const dailyShift = createShift(
             date,
             employeeShifts,
             cfg,
             schedule,
             rules,
-            false,
+            night,
         )
 
-        if (availEmployees!.length != cfg.shifts.employeesPerShift) {
+        if (dailyShift!.length != cfg.shifts.employeesPerShift) {
             // not able to plan a shift for given state 
             break;
         }
 
-        for (const e of availEmployees) {
+        for (const e of dailyShift) {
             for (const rule of rules) {
                 if (!rule(e, cfg, schedule)) {
                     continue planning;
@@ -71,13 +71,13 @@ export function nextShift(
             }
         }
 
-        for (const e of availEmployees) {
+        for (const e of dailyShift) {
             nextEmployeeShifts.set(e.employee.id.toString(), e);
         }
 
         const shift: Shift = {
             date: date,
-            employees: availEmployees,
+            employees: dailyShift,
             night: night,
         };
 
@@ -143,21 +143,12 @@ export function createShift(
 }
 
 export function sortEmployeeShifts(employeeShifts: Map<string, EmployeeShift>, night: boolean): EmployeeShift[] {
-    if (!night) {
-        return [...employeeShifts.values()];
-    }
-    
     return [...employeeShifts.values()].
-        sort((a: EmployeeShift, b: EmployeeShift) =>
-            a.nextNotSoonerThan === null && b.nextNotSoonerThan === null ? 0 :
-                a.nextNotSoonerThan === null ? 1 :
-                    b.nextNotSoonerThan === null ? -1 :
-                        a.nextNotSoonerThan.getTime() - b.nextNotSoonerThan.getTime()
-        );
+        sort(night ? nightEmployeeShiftComparator : dailyEmployeeShiftComparator);
 }
 
 export function isAvailable(employeeShift: EmployeeShift, date: Date, night: boolean): boolean {
-    if (night &&employeeShift.lastDate !== null) {
+    if (night && employeeShift.lastDate !== null) {
         const nextDay = new Date(employeeShift.lastDate);
         nextDay.setDate(nextDay.getDate() + 1);
         if (date.getTime() === nextDay.getTime()) {
@@ -167,3 +158,37 @@ export function isAvailable(employeeShift: EmployeeShift, date: Date, night: boo
 
     return employeeShift.nextNotSoonerThan === null || date >= employeeShift.nextNotSoonerThan;
 }
+
+export function nightEmployeeShiftComparator(a: EmployeeShift, b: EmployeeShift): number {
+    if (a.nextNotSoonerThan !== null && b.nextNotSoonerThan !== null) {
+        return a.nextNotSoonerThan.getTime() - b.nextNotSoonerThan.getTime();
+    }
+    return dailyEmployeeShiftComparator(a, b);
+}
+
+export function dailyEmployeeShiftComparator(a: EmployeeShift, b: EmployeeShift): number {
+    // nextNotLaterThan is the most important criterion, so we sort by it first
+    if (a.nextNotLaterThan !== null && b.nextNotLaterThan !== null) {
+        return a.nextNotLaterThan.getTime() - b.nextNotLaterThan.getTime();
+    }
+    if (a.nextNotLaterThan !== null && b.nextNotLaterThan === null) {
+        return -1;
+    }
+    if (a.nextNotLaterThan === null && b.nextNotLaterThan !== null) {
+        return 1;
+    }
+
+    if (a.nextNotSoonerThan === null && b.nextNotSoonerThan === null) {
+        return 0;
+    }
+    if (a.nextNotSoonerThan !== null && b.nextNotSoonerThan === null) {
+        return -1;
+    }
+    if (a.nextNotSoonerThan === null && b.nextNotSoonerThan !== null) {
+        return 1;
+    }
+    return a.nextNotSoonerThan!.getTime() - b.nextNotSoonerThan!.getTime();
+}
+
+
+

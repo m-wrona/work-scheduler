@@ -276,15 +276,15 @@ describe('nextShift', () => {
                         {
                             employee: employees.get('1')!.employee,
                             lastDate: new Date(2025, 9, 1),
-                            nextNotSoonerThan: new Date(2025, 9, 3),
+                            nextNotSoonerThan: new Date(2025, 9, 1),
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
                         },
                         {
                             employee: employees.get('2')!.employee,
                             lastDate: new Date(2025, 9, 1),
-                            nextNotSoonerThan: new Date(2025, 9, 3),
-                            nextNotLaterThan: new Date(2025, 9, 5),
+                            nextNotSoonerThan: new Date(2025, 9, 2),
+                            nextNotLaterThan: new Date(2025, 9, 6),
                             hours: 7.58,
                         },
                         {
@@ -311,18 +311,75 @@ describe('nextShift', () => {
             }
 
             const dayIdx = 1;
-            const result = nextShift(config, schedule, dayIdx, prevShifts, employees, rules, false, 1);
+            const shiftIdx = 1;
+            const result = nextShift(config, schedule, dayIdx, prevShifts, employees, rules, true, 1);
 
             expect(result).toHaveLength(7);
 
-            expect(result![dayIdx]?.date).toEqual(new Date(2025, 9, 2));
-            expect(result![dayIdx]?.employees).toHaveLength(4);
-            expect(result![dayIdx]?.night).toBe(false);
+            expect(result![shiftIdx]?.date).toEqual(new Date(2025, 9, 2));
+            expect(result![shiftIdx]?.employees).toHaveLength(4);
+            expect(result![shiftIdx]?.night).toBe(true);
 
-            expect(result![dayIdx]?.employees[0]?.employee.id).toBe(5);
-            expect(result![dayIdx]?.employees[1]?.employee.id).toBe(6);
-            expect(result![dayIdx]?.employees[2]?.employee.id).toBe(7);
-            expect(result![dayIdx]?.employees[3]?.employee.id).toBe(8);
+            expect(result![shiftIdx]?.employees[0]?.employee.id).toBe(1);
+            expect(result![shiftIdx]?.employees[1]?.employee.id).toBe(2);
+            expect(result![shiftIdx]?.employees[2]?.employee.id).toBe(3);
+            expect(result![shiftIdx]?.employees[3]?.employee.id).toBe(4);
+        });
+
+        it('should create night shift with free days in between', () => {
+            prevShifts = [
+                {
+                    date: new Date(2025, 9, 1),
+                    employees: [
+                        {
+                            employee: employees.get('1')!.employee,
+                            lastDate: new Date(2025, 9, 2),
+                            nextNotSoonerThan: new Date(2025, 9, 4),
+                            nextNotLaterThan: new Date(2025, 9, 6),
+                            hours: 7.58,
+                        },
+                        {
+                            employee: employees.get('2')!.employee,
+                            lastDate: new Date(2025, 9, 1),
+                            nextNotSoonerThan: new Date(2025, 9, 3),
+                            nextNotLaterThan: new Date(2025, 9, 5),
+                            hours: 7.58,
+                        },
+                        {
+                            employee: employees.get('3')!.employee,
+                            lastDate: new Date(2025, 9, 2),
+                            nextNotSoonerThan: new Date(2025, 9, 4),
+                            nextNotLaterThan: new Date(2025, 9, 6),
+                            hours: 7.58,
+                        },
+                        {
+                            employee: employees.get('4')!.employee,
+                            lastDate: new Date(2025, 9, 3),
+                            nextNotSoonerThan: new Date(2025, 9, 5),
+                            nextNotLaterThan: new Date(2025, 9, 7),
+                            hours: 7.58,
+                        },
+                    ],
+                    night: false,
+                },
+            ]
+
+            for (const e of prevShifts[0]!.employees) {
+                employees.set(e.employee.id.toString(), e);
+            }
+
+            const dayIdx = 2;
+            const shiftIdx = 1;
+            const result = nextShift(config, schedule, dayIdx, prevShifts, employees, rules, true, 1);
+
+            expect(result![shiftIdx]?.date).toEqual(new Date(2025, 9, 3));
+            expect(result![shiftIdx]?.employees).toHaveLength(4);
+            expect(result![shiftIdx]?.night).toBe(true);
+
+            expect(result![shiftIdx]?.employees[0]?.employee.id).toBe(2);
+            expect(result![shiftIdx]?.employees[1]?.employee.id).toBe(1);
+            expect(result![shiftIdx]?.employees[2]?.employee.id).toBe(3);
+            expect(result![shiftIdx]?.employees[3]?.employee.id).toBe(5);
         });
 
     });
