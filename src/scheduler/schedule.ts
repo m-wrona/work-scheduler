@@ -53,6 +53,8 @@ export function nextShift(
             date,
             employeeShifts,
             cfg,
+            schedule,
+            rules,
         )
 
         if (availEmployees!.length != cfg.shifts.employeesPerShift) {
@@ -97,6 +99,8 @@ export function createShift(
     date: Date,
     employeeShifts: Map<string, EmployeeShift>,
     cfg: WorkSchedulerConfig,
+    schedule: MonthSchedule,
+    rules: Rule[],
 ): EmployeeShift[] {
 
     var shift: EmployeeShift[] = [];
@@ -106,20 +110,27 @@ export function createShift(
             break;
         }
 
-        if (employeeShift.nextNotSoonerThan === null || date >= employeeShift.nextNotSoonerThan) {
-            const e = cloneEmployeeShift(employeeShift);
-            e.lastDate = date;
-            e.nextNotSoonerThan = new Date(
-                date.getFullYear(),
-                date.getMonth(),
-                date.getDate() + cfg.shifts.daysFreeBetweenShifts + 1,
-            );
-            e.nextNotLaterThan = new Date(
-                date.getFullYear(),
-                date.getMonth(),
-                date.getDate() + cfg.shifts.maxDaysFreeBetweenShifts,
-            );
-            e.hours += cfg.shifts.defaultShiftLength;
+        const available = employeeShift.nextNotSoonerThan === null || date >= employeeShift.nextNotSoonerThan
+        if (!available) {
+            continue;
+        }
+
+        const e = cloneEmployeeShift(employeeShift);
+        e.lastDate = date;
+        e.nextNotSoonerThan = new Date(
+            date.getFullYear(),
+            date.getMonth(),
+            date.getDate() + cfg.shifts.daysFreeBetweenShifts + 1,
+        );
+        e.nextNotLaterThan = new Date(
+            date.getFullYear(),
+            date.getMonth(),
+            date.getDate() + cfg.shifts.maxDaysFreeBetweenShifts,
+        );
+        e.hours += cfg.shifts.defaultShiftLength;
+
+        const ruleOK = rules.every(rule => rule(employeeShift, cfg, schedule));
+        if (ruleOK) {
             shift.push(employeeShift);
         }
 
