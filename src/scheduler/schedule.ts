@@ -114,8 +114,7 @@ export function createShift(
             break;
         }
 
-        const available = employeeShift.nextNotSoonerThan === null || date >= employeeShift.nextNotSoonerThan
-        if (!available) {
+        if (!isAvailable(employeeShift, date, night)) {
             continue;
         }
 
@@ -157,3 +156,14 @@ export function sortEmployeeShifts(employeeShifts: Map<string, EmployeeShift>, n
         );
 }
 
+export function isAvailable(employeeShift: EmployeeShift, date: Date, night: boolean): boolean {
+    if (night &&employeeShift.lastDate !== null) {
+        const nextDay = new Date(employeeShift.lastDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        if (date.getTime() === nextDay.getTime()) {
+            return true;
+        }
+    }
+
+    return employeeShift.nextNotSoonerThan === null || date >= employeeShift.nextNotSoonerThan;
+}
