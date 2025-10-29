@@ -55,6 +55,7 @@ export function nextShift(
             cfg,
             schedule,
             rules,
+            false,
         )
 
         if (availEmployees!.length != cfg.shifts.employeesPerShift) {
@@ -101,11 +102,14 @@ export function createShift(
     cfg: WorkSchedulerConfig,
     schedule: MonthSchedule,
     rules: Rule[],
+    night: boolean,
 ): EmployeeShift[] {
 
     var shift: EmployeeShift[] = [];
 
-    for (const employeeShift of employeeShifts.values()) {
+    const employeeOrder = sortEmployeeShifts(employeeShifts, night);
+
+    for (const employeeShift of employeeOrder) {
         if (shift.length >= cfg.shifts.employeesPerShift) {
             break;
         }
@@ -139,5 +143,17 @@ export function createShift(
     return shift;
 }
 
-
+export function sortEmployeeShifts(employeeShifts: Map<string, EmployeeShift>, night: boolean): EmployeeShift[] {
+    if (!night) {
+        return [...employeeShifts.values()];
+    }
+    
+    return [...employeeShifts.values()].
+        sort((a: EmployeeShift, b: EmployeeShift) =>
+            a.nextNotSoonerThan === null && b.nextNotSoonerThan === null ? 0 :
+                a.nextNotSoonerThan === null ? 1 :
+                    b.nextNotSoonerThan === null ? -1 :
+                        a.nextNotSoonerThan.getTime() - b.nextNotSoonerThan.getTime()
+        );
+}
 
