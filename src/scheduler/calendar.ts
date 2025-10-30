@@ -23,17 +23,17 @@ export function createMonthSchedule(
 ): MonthSchedule {
   const workingDays: Date[] = [];
   let workingDaysCount = 0;
-  const startDay = new Date(year, month - 1, 1, 0, 0, 0);
-  const endDay = new Date(year, month + monthsCount - 1, 1, 0, 0, 0);
+  const startDay = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0));
+  const endDay = new Date(Date.UTC(year, month + monthsCount - 1, 1, 0, 0, 0, 0));
   let totalDays = 0;
 
   for (
-    let currentDate = startDay;
-    currentDate.getTime() <= endDay.getTime();
-    currentDate.setDate(currentDate.getDate() + 1)
+    let currentDate = new Date(startDay);
+    currentDate.getTime() < endDay.getTime();
+    currentDate.setUTCDate(currentDate.getUTCDate() + 1)
   ) {
-    const day = currentDate.getDate();
-    const dayOfWeek = currentDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    const day = currentDate.getUTCDate();
+    const dayOfWeek = currentDate.getUTCDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
     if (!holidays.includes(day) &&dayOfWeek >= 1 && dayOfWeek <= 5) {
       workingDaysCount++;
     }
@@ -50,7 +50,7 @@ export function createMonthSchedule(
     totalWorkingHours: totalWorkingHours,
     shiftsNumber: Math.floor(totalWorkingHours / shiftLength),
     workingDaysList: workingDays,
-    holidays: holidays.map(day => new Date(year, month - 1, day)),
+    holidays: holidays.map(day => new Date(Date.UTC(year, month - 1, day))),
   };
 }
 

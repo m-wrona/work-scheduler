@@ -56,7 +56,8 @@ console.log(`Holidays: ${monthSchedule.holidays}`);
 console.log(`Total working hours: ${monthSchedule.totalWorkingHours} hours`);
 console.log(`Shifts number: ${monthSchedule.shiftsNumber}`);
 
-console.log('\nGenerating schedule:', monthSchedule.workingDaysList);
+console.log('1st day of  schedule:', monthSchedule.workingDaysList[0]);
+console.log('Last day of  schedule:', monthSchedule.workingDaysList[monthSchedule.workingDaysList.length - 1]);
 
 const shifts = nextShift(
   typedConfig, 
