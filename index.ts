@@ -6,6 +6,7 @@ import { generateMonthlySchedule } from './src/scheduler/planner';
 import { Table } from 'console-table-printer';
 import { printHTMLFromShifts } from './src/html-generator';
 import { nextShift } from './src/scheduler/schedule';
+import { newEmployeeShift } from './src/scheduler/model';
 
 const typedConfig: WorkSchedulerConfig = config;
 
@@ -60,7 +61,7 @@ const shifts = nextShift(
   monthSchedule, 
   0, 
   [], 
-  new Map(typedConfig.employees.map(e => [e.id.toString(), { employee: e, hours: 0, lastDate: null, nextNotSoonerThan: null, nextNotLaterThan: null }])), 
+  new Map(typedConfig.employees.map(e => [e.id.toString(), newEmployeeShift(e)])), 
 );
 
 if (shifts === null) {

@@ -104,6 +104,7 @@ export function createShift(
             date.getDate() + cfg.shifts.maxDaysFreeBetweenShifts,
         );
         e.hours += cfg.shifts.defaultShiftLength;
+        e.lastShiftNight = night;
 
         const ruleOK = rules.every(rule => rule(employeeShift, cfg, schedule, date, night));
         if (ruleOK) {
@@ -121,7 +122,7 @@ export function sortEmployeeShifts(employeeShifts: Map<string, EmployeeShift>, n
 }
 
 export function isAvailable(employeeShift: EmployeeShift, date: Date, night: boolean): boolean {
-    if (night && employeeShift.lastDate !== null) {
+    if (night && employeeShift.lastDate !== null && !employeeShift.lastShiftNight) {
         const nextDay = new Date(employeeShift.lastDate);
         nextDay.setDate(nextDay.getDate() + 1);
         if (date.getTime() === nextDay.getTime()) {

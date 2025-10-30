@@ -130,6 +130,7 @@ describe('nextShift', () => {
                             nextNotSoonerThan: new Date(2025, 9, 3),
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
+                            lastShiftNight: false,
                         },
                         {
                             employee: employees.get('2')!.employee,
@@ -137,6 +138,7 @@ describe('nextShift', () => {
                             nextNotSoonerThan: new Date(2025, 9, 3),
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
+                            lastShiftNight: false,
                         },
                         {
                             employee: employees.get('3')!.employee,
@@ -144,6 +146,7 @@ describe('nextShift', () => {
                             nextNotSoonerThan: new Date(2025, 9, 3),
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
+                            lastShiftNight: false,
                         },
                         {
                             employee: employees.get('4')!.employee,
@@ -151,6 +154,7 @@ describe('nextShift', () => {
                             nextNotSoonerThan: new Date(2025, 9, 3),
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
+                            lastShiftNight: false,
                         },
                     ],
                     night: false,
@@ -187,6 +191,7 @@ describe('nextShift', () => {
                             nextNotSoonerThan: new Date(2025, 9, 3),
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
+                            lastShiftNight: false,
                         },
                         {
                             employee: employees.get('2')!.employee,
@@ -194,6 +199,7 @@ describe('nextShift', () => {
                             nextNotSoonerThan: new Date(2025, 9, 3),
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
+                            lastShiftNight: false,
                         },
                         {
                             employee: employees.get('3')!.employee,
@@ -201,6 +207,7 @@ describe('nextShift', () => {
                             nextNotSoonerThan: new Date(2025, 9, 3),
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
+                            lastShiftNight: false,
                         },
                         {
                             employee: employees.get('4')!.employee,
@@ -208,6 +215,7 @@ describe('nextShift', () => {
                             nextNotSoonerThan: new Date(2025, 9, 3),
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
+                            lastShiftNight: false,
                         },
                     ],
                     night: false,
@@ -245,6 +253,7 @@ describe('nextShift', () => {
                             nextNotSoonerThan: new Date(2025, 9, 3),
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
+                            lastShiftNight: false,
                         },
                         {
                             employee: employees.get('2')!.employee,
@@ -252,6 +261,7 @@ describe('nextShift', () => {
                             nextNotSoonerThan: new Date(2025, 9, 3),
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
+                            lastShiftNight: false,
                         },
                         {
                             employee: employees.get('3')!.employee,
@@ -259,6 +269,7 @@ describe('nextShift', () => {
                             nextNotSoonerThan: new Date(2025, 9, 3),
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
+                            lastShiftNight: false,
                         },
                         {
                             employee: employees.get('4')!.employee,
@@ -266,6 +277,7 @@ describe('nextShift', () => {
                             nextNotSoonerThan: new Date(2025, 9, 3),
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
+                            lastShiftNight: false,
                         },
                     ],
                     night: false,
@@ -303,6 +315,7 @@ describe('nextShift', () => {
                             nextNotSoonerThan: new Date(2025, 9, 1),
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
+                            lastShiftNight: false,
                         },
                         {
                             employee: employees.get('2')!.employee,
@@ -310,6 +323,7 @@ describe('nextShift', () => {
                             nextNotSoonerThan: new Date(2025, 9, 2),
                             nextNotLaterThan: new Date(2025, 9, 6),
                             hours: 7.58,
+                            lastShiftNight: false,
                         },
                         {
                             employee: employees.get('3')!.employee,
@@ -317,6 +331,7 @@ describe('nextShift', () => {
                             nextNotSoonerThan: new Date(2025, 9, 3),
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
+                            lastShiftNight: false,
                         },
                         {
                             employee: employees.get('4')!.employee,
@@ -324,6 +339,7 @@ describe('nextShift', () => {
                             nextNotSoonerThan: new Date(2025, 9, 3),
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
+                            lastShiftNight: false,
                         },
                     ],
                     night: false,
@@ -361,6 +377,7 @@ describe('nextShift', () => {
                             nextNotSoonerThan: new Date(2025, 9, 4),
                             nextNotLaterThan: new Date(2025, 9, 6),
                             hours: 7.58,
+                            lastShiftNight: false,
                         },
                         {
                             employee: employees.get('2')!.employee,
@@ -368,6 +385,7 @@ describe('nextShift', () => {
                             nextNotSoonerThan: new Date(2025, 9, 3),
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
+                            lastShiftNight: false,
                         },
                         {
                             employee: employees.get('3')!.employee,
@@ -375,6 +393,7 @@ describe('nextShift', () => {
                             nextNotSoonerThan: new Date(2025, 9, 4),
                             nextNotLaterThan: new Date(2025, 9, 6),
                             hours: 7.58,
+                            lastShiftNight: false,
                         },
                         {
                             employee: employees.get('4')!.employee,
@@ -382,6 +401,7 @@ describe('nextShift', () => {
                             nextNotSoonerThan: new Date(2025, 9, 5),
                             nextNotLaterThan: new Date(2025, 9, 7),
                             hours: 7.58,
+                            lastShiftNight: false,
                         },
                     ],
                     night: false,
@@ -448,6 +468,25 @@ describe('nextShift', () => {
             expect(result![3]?.employees[1]?.employee.id).toBe(2);
             expect(result![3]?.employees[2]?.employee.id).toBe(3);
             expect(result![3]?.employees[3]?.employee.id).toBe(4);
+
+             // 3rd day
+             expect(result![4]?.date).toEqual(new Date(2025, 9, 3));
+             expect(result![4]?.employees).toHaveLength(4);
+             expect(result![4]?.night).toBe(false);
+ 
+             expect(result![4]?.employees[0]?.employee.id).toBe(5);
+             expect(result![4]?.employees[1]?.employee.id).toBe(6);
+             expect(result![4]?.employees[2]?.employee.id).toBe(7);
+             expect(result![4]?.employees[3]?.employee.id).toBe(8);
+ 
+             expect(result![5]?.date).toEqual(new Date(2025, 9, 3));
+             expect(result![5]?.employees).toHaveLength(4);
+             expect(result![5]?.night).toBe(true);
+ 
+             expect(result![5]?.employees[0]?.employee.id).toBe(9);
+             expect(result![5]?.employees[1]?.employee.id).toBe(10);
+             expect(result![5]?.employees[2]?.employee.id).toBe(11);
+             expect(result![5]?.employees[3]?.employee.id).toBe(12);
         });
 
     });
