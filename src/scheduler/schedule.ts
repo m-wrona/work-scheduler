@@ -6,25 +6,6 @@ import { Rules } from "./rules";
 import { newEmployeeShift, cloneEmployeeShift } from "./model";
 
 
-export function createSchedule(
-    cfg: WorkSchedulerConfig,
-    schedule: MonthSchedule,
-    rule: Rule[] = Rules,
-): Schedule {
-    const employees: EmployeeShift[] = cfg.employees.map(e => newEmployeeShift(e));
-    const shifts: Map<Date, Shift> = new Map<Date, Shift>();
-
-    // for (const date in schedule.workingDaysList) {
-    // shifts.set(date, createShift(date, employees, cfg));
-    // }
-
-    return {
-        employees: employees,
-        days: shifts,
-        nights: shifts,
-    };
-}
-
 export function nextShift(
     cfg: WorkSchedulerConfig,
     schedule: MonthSchedule,

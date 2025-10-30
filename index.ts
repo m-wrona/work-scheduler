@@ -4,8 +4,9 @@ import { isValidConfig } from './src/types/config';
 import { createMonthSchedule, getCurrentYear } from './src/scheduler/calendar';
 import { generateMonthlySchedule } from './src/scheduler/planner';
 import { Table } from 'console-table-printer';
-import type { ScheduleGenerationResult } from './src/types/schedule';
+import type { ScheduleGenerationResult, ScheduleDay, DayShift, EmployeeShifts, MonthlySchedulePlan } from './src/types/schedule';
 import { printHTMLScheduleTable } from './src/html-generator';
+import { nextShift } from './src/scheduler/schedule';
 
 const typedConfig: WorkSchedulerConfig = config;
 
@@ -53,72 +54,72 @@ console.log(`Working days (Mon-Fri): ${monthSchedule.workingDays}`);
 console.log(`Holidays: ${monthSchedule.holidays}`);
 console.log(`Total working hours: ${monthSchedule.totalWorkingHours} hours`);
 console.log(`Shifts number: ${monthSchedule.shiftsNumber}`);
-// console.log(`Working days list: ${monthSchedule.workingDaysList.map(date => date.toLocaleDateString()).join(', ')}`);
 
-// Generate monthly schedule plan
 
-console.log('\nGenerating Monthly Schedule Plan:');
-console.log('=================================');
+const shifts = nextShift(
+  typedConfig, 
+  monthSchedule, 
+  0, 
+  [], 
+  new Map(typedConfig.employees.map(e => [e.id.toString(), { employee: e, hours: 0, lastDate: null, nextNotSoonerThan: null, nextNotLaterThan: null }])), 
+);
 
-const scheduleResult = generateMonthlySchedule(typedConfig, {
-  year: currentYear,
-  month: typedConfig.schedule.month,
-  planNextWorkingDays: monthSchedule.totalDays
-});
-
-console.log(`Generated schedule for ${scheduleResult.schedule.month}/${scheduleResult.schedule.year}`);
-
-// Print schedule as table
-console.log('\n📅 Monthly Schedule:');
-console.log('===================');
-
-const scheduleTable = new Table({
-  title: `Work Schedule - ${scheduleResult.schedule.month}/${scheduleResult.schedule.year}`,
-  columns: [
-    { name: 'date', title: 'Date', alignment: 'left' },
-    { name: 'day', title: 'Day', alignment: 'left' },
-    { name: 'dailyShift', title: 'Daily Shift', alignment: 'left' },
-    { name: 'nightShift', title: 'Night Shift', alignment: 'left' }
-  ]
-});
-
-scheduleResult.schedule.days.forEach(day => {
-  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const dayName = dayNames[day.weekDay];
-  const dateStr = day.date.toLocaleDateString('en-US', { 
-    month: '2-digit', 
-    day: '2-digit' 
-  });
-  
-  const dailyShiftNames = day.shift.dailyShift
-    .map(emp => `${emp.employee.firstName} ${emp.employee.lastName}`)
-    .join(', ');
-    
-  const nightShiftNames = day.shift.nightShift
-    .map(emp => `${emp.employee.firstName} ${emp.employee.lastName}`)
-    .join(', ');
-
-  scheduleTable.addRow({
-    date: dateStr,
-    day: dayName,
-    dailyShift: dailyShiftNames || 'No one assigned',
-    nightShift: nightShiftNames || 'No one assigned'
-  });
-});
-
-scheduleTable.printTable();
-
-// Print HTML schedule table to file
-printHTMLScheduleTable(scheduleResult, typedConfig);
-
-if (scheduleResult.warnings.length > 0) {
-  console.log('\nWarnings:');
-  scheduleResult.warnings.forEach(warning => console.log(`- ${warning}`));
+if (shifts === null) {
+  console.error('Failed to generate schedule');
+  process.exit(1);
 }
 
-if (scheduleResult.errors.length > 0) {
-  console.log('\nErrors:');
-  scheduleResult.errors.forEach(err => console.log(`- ${err}`));
-}
+// Aggregate shifts by date to display daily and night shifts per day
+const shiftsByDate = new Map<string, { date: Date; daily: string[]; night: string[] }>();
+
+shifts.forEach(shift => {
+  const key = shift.date.toISOString().slice(0, 10);
+  if (!shiftsByDate.has(key)) {
+    shiftsByDate.set(key, { date: shift.date, daily: [], night: [] });
+  }
+  const entry = shiftsByDate.get(key)!;
+  const names = shift.employees.map(e => `${e.employee.firstName} ${e.employee.lastName}`);
+  if (shift.night) {
+    entry.night.push(...names);
+  } else {
+    entry.daily.push(...names);
+  }
+});
+
+// Generate HTML using legacy generator by adapting Shift[] to MonthlySchedulePlan
+const daysForHtml: ScheduleDay[] = [...shiftsByDate.values()]
+  .sort((a, b) => a.date.getTime() - b.date.getTime())
+  .map(entry => {
+    const dailyShiftEmployees: EmployeeShifts[] = entry.daily.map(name => {
+      const [firstName, lastName] = name.split(' ');
+      const employee = typedConfig.employees.find(e => e.firstName === firstName && e.lastName === lastName)!;
+      return { employee } as EmployeeShifts;
+    });
+    const nightShiftEmployees: EmployeeShifts[] = entry.night.map(name => {
+      const [firstName, lastName] = name.split(' ');
+      const employee = typedConfig.employees.find(e => e.firstName === firstName && e.lastName === lastName)!;
+      return { employee } as EmployeeShifts;
+    });
+    const shift: DayShift = { dailyShift: dailyShiftEmployees, nightShift: nightShiftEmployees };
+    return {
+      date: entry.date,
+      weekDay: entry.date.getDay(),
+      shift,
+    } as ScheduleDay;
+  });
+
+const monthlyPlan: MonthlySchedulePlan = {
+  month: monthSchedule.month,
+  year: monthSchedule.year,
+  days: daysForHtml,
+};
+
+const htmlResult: ScheduleGenerationResult = {
+  schedule: monthlyPlan,
+  warnings: [],
+  errors: [],
+};
+
+printHTMLScheduleTable(htmlResult, typedConfig);
 
 

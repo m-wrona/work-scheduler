@@ -102,9 +102,6 @@ export function generateHTMLScheduleTable(scheduleResult: ScheduleGenerationResu
 }
 
 export function printHTMLScheduleTable(scheduleResult: ScheduleGenerationResult, config: WorkSchedulerConfig): void {
-  console.log('\n🌐 HTML Schedule Table:');
-  console.log('========================');
-  
   const htmlTable = generateHTMLScheduleTable(scheduleResult, config);
   
   // Create a complete HTML document
