@@ -124,9 +124,9 @@ export function createShift(
         );
         e.hours += cfg.shifts.defaultShiftLength;
 
-        const ruleOK = rules.every(rule => rule(employeeShift, cfg, schedule));
+        const ruleOK = rules.every(rule => rule(employeeShift, cfg, schedule, date, night));
         if (ruleOK) {
-            shift.push(employeeShift);
+            shift.push(e);
         }
 
     }
