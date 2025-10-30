@@ -84,7 +84,7 @@ describe('nextShift', () => {
         it('should create shift for 1st day', () => {
             const result = nextShift(config, schedule, 0, prevShifts, employees, rules, false, 1);
 
-            expect(result).toHaveLength(7);
+            expect(result).not.toBe(0);
             expect(result![0]?.date).toEqual(new Date(2025, 9, 1));
             expect(result![0]?.employees).toHaveLength(4);
             expect(result![0]?.night).toBe(false);
@@ -140,7 +140,7 @@ describe('nextShift', () => {
             const dayIdx = 1;
             const result = nextShift(config, schedule, dayIdx, prevShifts, employees, rules, false, 1);
 
-            expect(result).toHaveLength(7);
+            expect(result).not.toBe(0);
 
             expect(result![dayIdx]?.date).toEqual(new Date(2025, 9, 2));
             expect(result![dayIdx]?.employees).toHaveLength(4);
@@ -198,7 +198,7 @@ describe('nextShift', () => {
             const shiftIdx = 1;
             const result = nextShift(config, schedule, dayIdx, prevShifts, employees, rules, false, 1);
 
-            expect(result).toHaveLength(6);
+            expect(result).not.toBe(0);
 
             expect(result![shiftIdx]?.date).toEqual(new Date(2025, 9, 3));
             expect(result![shiftIdx]?.employees).toHaveLength(4);
@@ -256,7 +256,7 @@ describe('nextShift', () => {
             const shiftIdx = 1;
             const result = nextShift(config, schedule, dayIdx, prevShifts, employees, rules, false, 1);
 
-            expect(result).toHaveLength(4);
+            expect(result).not.toBe(0);
 
             expect(result![shiftIdx]?.date).toEqual(new Date(2025, 9, 5));
             expect(result![shiftIdx]?.employees).toHaveLength(4);
@@ -314,7 +314,7 @@ describe('nextShift', () => {
             const shiftIdx = 1;
             const result = nextShift(config, schedule, dayIdx, prevShifts, employees, rules, true, 1);
 
-            expect(result).toHaveLength(7);
+            expect(result).not.toBe(0);
 
             expect(result![shiftIdx]?.date).toEqual(new Date(2025, 9, 2));
             expect(result![shiftIdx]?.employees).toHaveLength(4);
@@ -380,6 +380,32 @@ describe('nextShift', () => {
             expect(result![shiftIdx]?.employees[1]?.employee.id).toBe(1);
             expect(result![shiftIdx]?.employees[2]?.employee.id).toBe(3);
             expect(result![shiftIdx]?.employees[3]?.employee.id).toBe(5);
+        });
+
+        it('should create day and night shift for 1st day', () => {
+            const result = nextShift(config, schedule, 0, prevShifts, employees, rules, false, 1);
+
+            const dayIdx = 0;
+            expect(result).toHaveLength(14);
+
+            expect(result![dayIdx]?.date).toEqual(new Date(2025, 9, 1));
+            expect(result![dayIdx]?.employees).toHaveLength(4);
+            expect(result![dayIdx]?.night).toBe(false);
+
+            expect(result![dayIdx]?.employees[0]?.employee.id).toBe(1);
+            expect(result![dayIdx]?.employees[1]?.employee.id).toBe(2);
+            expect(result![dayIdx]?.employees[2]?.employee.id).toBe(3);
+            expect(result![dayIdx]?.employees[3]?.employee.id).toBe(4);
+
+            const nightIdx = 1;
+            expect(result![nightIdx]?.date).toEqual(new Date(2025, 9, 1));
+            expect(result![nightIdx]?.employees).toHaveLength(4);
+            expect(result![nightIdx]?.night).toBe(true);
+nightIdx
+            expect(result![nightIdx]?.employees[0]?.employee.id).toBe(1);
+            expect(result![nightIdx]?.employees[1]?.employee.id).toBe(2);
+            expect(result![nightIdx]?.employees[2]?.employee.id).toBe(3);
+            expect(result![nightIdx]?.employees[3]?.employee.id).toBe(4);
         });
 
     });

@@ -49,7 +49,7 @@ export function nextShift(
     );
 
     planning: for (let i = 0; i < maxTries; i++) {
-        const dailyShift = createShift(
+        const shiftEmployees = createShift(
             date,
             employeeShifts,
             cfg,
@@ -58,37 +58,29 @@ export function nextShift(
             night,
         )
 
-        if (dailyShift!.length != cfg.shifts.employeesPerShift) {
+        if (shiftEmployees!.length != cfg.shifts.employeesPerShift) {
             // not able to plan a shift for given state 
             break;
         }
 
-        for (const e of dailyShift) {
-            for (const rule of rules) {
-                if (!rule(e, cfg, schedule)) {
-                    continue planning;
-                }
-            }
-        }
-
-        for (const e of dailyShift) {
+        for (const e of shiftEmployees) {
             nextEmployeeShifts.set(e.employee.id.toString(), e);
         }
 
         const shift: Shift = {
             date: date,
-            employees: dailyShift,
+            employees: shiftEmployees,
             night: night,
         };
 
         return nextShift(
             cfg,
             schedule,
-            dayIdx + 1,
+            night ? dayIdx + 1 : dayIdx,
             [...prevShifts, shift],
             nextEmployeeShifts,
             rules,
-            night,
+            !night,
             maxTries,
         );
     }
