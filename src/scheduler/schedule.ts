@@ -41,7 +41,7 @@ export function nextShift(
 
         if (shiftEmployees!.length != cfg.shifts.employeesPerShift) {
             // not able to plan a shift for given state 
-            break;
+            // break;
         }
 
         for (const e of shiftEmployees) {

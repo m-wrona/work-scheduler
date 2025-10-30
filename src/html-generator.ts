@@ -179,45 +179,147 @@ export function printHTMLScheduleTable(scheduleResult: ScheduleGenerationResult,
 
 // Helper to adapt Shift[] to MonthlySchedulePlan and print HTML
 export function printHTMLFromShifts(shifts: Shift[], config: WorkSchedulerConfig, monthSchedule: MonthSchedule): void {
-  // Aggregate shifts by date
-  const shiftsByDate = new Map<string, { date: Date; daily: EmployeeShifts[]; night: EmployeeShifts[] }>();
+  // Group shifts by month/year (supports ranges spanning two months)
+  const shiftsByMonth = new Map<string, Shift[]>();
+  for (const s of shifts) {
+    const y = s.date.getFullYear();
+    const m = s.date.getMonth() + 1; // 1-12
+    const key = `${y}-${m}`;
+    if (!shiftsByMonth.has(key)) shiftsByMonth.set(key, []);
+    shiftsByMonth.get(key)!.push(s);
+  }
 
-  shifts.forEach(shift => {
-    const key = shift.date.toISOString().slice(0, 10);
-    if (!shiftsByDate.has(key)) {
-      shiftsByDate.set(key, { date: shift.date, daily: [], night: [] });
+  // For each month, aggregate per-day and prepare table HTML
+  const monthlySections: { year: number; month: number; tableHtml: string }[] = [];
+  for (const [, monthShifts] of shiftsByMonth) {
+    // Aggregate shifts by date within this month
+    const perDay = new Map<string, { date: Date; daily: EmployeeShifts[]; night: EmployeeShifts[] }>();
+    for (const shift of monthShifts) {
+      const dateKey = shift.date.toISOString().slice(0, 10);
+      if (!perDay.has(dateKey)) {
+        perDay.set(dateKey, { date: shift.date, daily: [], night: [] });
+      }
+      const entry = perDay.get(dateKey)!;
+      const employeeShifts: EmployeeShifts[] = shift.employees.map(e => ({ employee: e.employee }));
+      if (shift.night) {
+        entry.night.push(...employeeShifts);
+      } else {
+        entry.daily.push(...employeeShifts);
+      }
     }
-    const entry = shiftsByDate.get(key)!;
-    const employeeShifts: EmployeeShifts[] = shift.employees.map(e => ({ employee: e.employee }));
-    if (shift.night) {
-      entry.night.push(...employeeShifts);
-    } else {
-      entry.daily.push(...employeeShifts);
-    }
-  });
 
-  const daysForHtml: ScheduleDay[] = [...shiftsByDate.values()]
-    .sort((a, b) => a.date.getTime() - b.date.getTime())
-    .map(entry => {
-      const shift: DayShift = { dailyShift: entry.daily, nightShift: entry.night };
-      return {
-        date: entry.date,
-        weekDay: entry.date.getDay(),
-        shift,
-      } as ScheduleDay;
-    });
+    const daysForHtml: ScheduleDay[] = [...perDay.values()]
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
+      .map(entry => {
+        const shift: DayShift = { dailyShift: entry.daily, nightShift: entry.night };
+        return {
+          date: entry.date,
+          weekDay: entry.date.getDay(),
+          shift,
+        } as ScheduleDay;
+      });
 
-  const monthlyPlan: MonthlySchedulePlan = {
-    month: monthSchedule.month,
-    year: monthSchedule.year,
-    days: daysForHtml,
-  };
+    const sampleDate = monthShifts[0]!.date;
+    const monthlyPlan: MonthlySchedulePlan = {
+      month: sampleDate.getMonth() + 1,
+      year: sampleDate.getFullYear(),
+      days: daysForHtml,
+    };
 
-  const htmlResult: ScheduleGenerationResult = {
-    schedule: monthlyPlan,
-    warnings: [],
-    errors: [],
-  };
+    const htmlResult: ScheduleGenerationResult = {
+      schedule: monthlyPlan,
+      warnings: [],
+      errors: [],
+    };
 
-  printHTMLScheduleTable(htmlResult, config);
+    const tableHtml = generateHTMLScheduleTable(htmlResult, config);
+    monthlySections.push({ year: monthlyPlan.year, month: monthlyPlan.month, tableHtml });
+  }
+
+  // Sort sections chronologically
+  monthlySections.sort((a, b) => a.year - b.year || a.month - b.month);
+
+  // Build a single HTML document containing all monthly tables
+  const first = monthlySections[0];
+  const last = monthlySections[monthlySections.length - 1];
+  const titleRange = first && last
+    ? `${first.month}/${first.year} - ${last.month}/${last.year}`
+    : `${monthSchedule.month}/${monthSchedule.year}`;
+
+  const combinedHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Schedule - ${titleRange}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #333;
+            text-align: center;
+            margin: 30px 0 10px 0;
+        }
+        table {
+            border-collapse: collapse;
+            margin: 0 auto;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        th, td {
+            padding: 8px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+        .employee-name {
+            font-weight: bold;
+            text-align: left;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f0f8ff;
+        }
+        th.saturday, td.saturday {
+            background-color: #90EE90;
+            color: #006400;
+        }
+        th.sunday, td.sunday {
+            background-color: #FFA500;
+            color: #8B4513;
+        }
+        th.holiday, td.holiday {
+            background-color: #FFB6C1;
+            color: #8B008B;
+        }
+    </style>
+  </head>
+  <body>
+    <h1>Work Schedule - ${titleRange}</h1>
+    ${monthlySections.map(s => `
+      <h2>${s.month}/${s.year}</h2>
+      ${s.tableHtml}
+    `).join('\n')}
+  </body>
+  </html>`;
+
+  const outName = first && last
+    ? `schedule-${first.month}-${first.year}_to_${last.month}-${last.year}.html`
+    : `schedule-${monthSchedule.month}-${monthSchedule.year}.html`;
+  const outPath = join(process.cwd(), outName);
+  writeFileSync(outPath, combinedHtml, 'utf8');
+  console.log(`\n✅ HTML schedule table saved to: ${outPath}`);
 }
