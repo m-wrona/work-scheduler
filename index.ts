@@ -41,6 +41,7 @@ const currentYear = getCurrentYear();
 const monthSchedule = createMonthSchedule(
   typedConfig.schedule.month,
   currentYear,
+  2,
   typedConfig.workingHours.defaultDailyHours,
   typedConfig.shifts.defaultShiftLength,
   typedConfig.schedule.holidays,
@@ -55,6 +56,7 @@ console.log(`Holidays: ${monthSchedule.holidays}`);
 console.log(`Total working hours: ${monthSchedule.totalWorkingHours} hours`);
 console.log(`Shifts number: ${monthSchedule.shiftsNumber}`);
 
+console.log('\nGenerating schedule:', monthSchedule.workingDaysList);
 
 const shifts = nextShift(
   typedConfig, 

@@ -16,29 +16,28 @@ export interface MonthSchedule {
 export function createMonthSchedule(
   month: number,
   year: number,
+  monthsCount: number = 2,
   dailyHours: number = 8,
   shiftLength: number = 12,
   holidays: number[] = [],
 ): MonthSchedule {
-  const lastDay = new Date(year, month, 0); // 0 gives us the last day of the previous month
-
-  const totalDays = lastDay.getDate();
   const workingDays: Date[] = [];
   let workingDaysCount = 0;
+  const startDay = new Date(year, month - 1, 1, 0, 0, 0);
+  const endDay = new Date(year, month + monthsCount - 1, 1, 0, 0, 0);
+  let totalDays = 0;
 
-  // Iterate through each day of the month
-  for (let day = 1; day <= totalDays; day++) {
-    const currentDate = new Date(year, month - 1, day);
+  for (
+    let currentDate = startDay;
+    currentDate.getTime() <= endDay.getTime();
+    currentDate.setDate(currentDate.getDate() + 1)
+  ) {
+    const day = currentDate.getDate();
     const dayOfWeek = currentDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-
-    if (holidays.includes(day)) {
-      continue;
-    }
-    // Check if it's a working day (Monday = 1, Tuesday = 2, ..., Friday = 5)
-    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+    if (!holidays.includes(day) &&dayOfWeek >= 1 && dayOfWeek <= 5) {
       workingDaysCount++;
-      workingDays.push(currentDate);
     }
+    workingDays.push(new Date(currentDate));
   }
 
   const totalWorkingHours = workingDaysCount * dailyHours
