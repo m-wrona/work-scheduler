@@ -1,5 +1,7 @@
 import type { WorkSchedulerConfig } from './types/config';
-import type { ScheduleGenerationResult } from './types/schedule';
+import type { ScheduleGenerationResult, ScheduleDay, DayShift, EmployeeShifts, MonthlySchedulePlan } from './types/schedule';
+import type { Shift } from './scheduler/model';
+import type { MonthSchedule } from './scheduler/calendar';
 import { writeFileSync } from 'fs';
 import { join } from 'path';
 
@@ -173,4 +175,49 @@ export function printHTMLScheduleTable(scheduleResult: ScheduleGenerationResult,
   writeFileSync(filePath, htmlDocument, 'utf8');
 
   console.log(`\n✅ HTML schedule table saved to: ${filePath}`);
+}
+
+// Helper to adapt Shift[] to MonthlySchedulePlan and print HTML
+export function printHTMLFromShifts(shifts: Shift[], config: WorkSchedulerConfig, monthSchedule: MonthSchedule): void {
+  // Aggregate shifts by date
+  const shiftsByDate = new Map<string, { date: Date; daily: EmployeeShifts[]; night: EmployeeShifts[] }>();
+
+  shifts.forEach(shift => {
+    const key = shift.date.toISOString().slice(0, 10);
+    if (!shiftsByDate.has(key)) {
+      shiftsByDate.set(key, { date: shift.date, daily: [], night: [] });
+    }
+    const entry = shiftsByDate.get(key)!;
+    const employeeShifts: EmployeeShifts[] = shift.employees.map(e => ({ employee: e.employee }));
+    if (shift.night) {
+      entry.night.push(...employeeShifts);
+    } else {
+      entry.daily.push(...employeeShifts);
+    }
+  });
+
+  const daysForHtml: ScheduleDay[] = [...shiftsByDate.values()]
+    .sort((a, b) => a.date.getTime() - b.date.getTime())
+    .map(entry => {
+      const shift: DayShift = { dailyShift: entry.daily, nightShift: entry.night };
+      return {
+        date: entry.date,
+        weekDay: entry.date.getDay(),
+        shift,
+      } as ScheduleDay;
+    });
+
+  const monthlyPlan: MonthlySchedulePlan = {
+    month: monthSchedule.month,
+    year: monthSchedule.year,
+    days: daysForHtml,
+  };
+
+  const htmlResult: ScheduleGenerationResult = {
+    schedule: monthlyPlan,
+    warnings: [],
+    errors: [],
+  };
+
+  printHTMLScheduleTable(htmlResult, config);
 }

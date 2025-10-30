@@ -4,8 +4,7 @@ import { isValidConfig } from './src/types/config';
 import { createMonthSchedule, getCurrentYear } from './src/scheduler/calendar';
 import { generateMonthlySchedule } from './src/scheduler/planner';
 import { Table } from 'console-table-printer';
-import type { ScheduleGenerationResult, ScheduleDay, DayShift, EmployeeShifts, MonthlySchedulePlan } from './src/types/schedule';
-import { printHTMLScheduleTable } from './src/html-generator';
+import { printHTMLFromShifts } from './src/html-generator';
 import { nextShift } from './src/scheduler/schedule';
 
 const typedConfig: WorkSchedulerConfig = config;
@@ -69,57 +68,7 @@ if (shifts === null) {
   process.exit(1);
 }
 
-// Aggregate shifts by date to display daily and night shifts per day
-const shiftsByDate = new Map<string, { date: Date; daily: string[]; night: string[] }>();
-
-shifts.forEach(shift => {
-  const key = shift.date.toISOString().slice(0, 10);
-  if (!shiftsByDate.has(key)) {
-    shiftsByDate.set(key, { date: shift.date, daily: [], night: [] });
-  }
-  const entry = shiftsByDate.get(key)!;
-  const names = shift.employees.map(e => `${e.employee.firstName} ${e.employee.lastName}`);
-  if (shift.night) {
-    entry.night.push(...names);
-  } else {
-    entry.daily.push(...names);
-  }
-});
-
-// Generate HTML using legacy generator by adapting Shift[] to MonthlySchedulePlan
-const daysForHtml: ScheduleDay[] = [...shiftsByDate.values()]
-  .sort((a, b) => a.date.getTime() - b.date.getTime())
-  .map(entry => {
-    const dailyShiftEmployees: EmployeeShifts[] = entry.daily.map(name => {
-      const [firstName, lastName] = name.split(' ');
-      const employee = typedConfig.employees.find(e => e.firstName === firstName && e.lastName === lastName)!;
-      return { employee } as EmployeeShifts;
-    });
-    const nightShiftEmployees: EmployeeShifts[] = entry.night.map(name => {
-      const [firstName, lastName] = name.split(' ');
-      const employee = typedConfig.employees.find(e => e.firstName === firstName && e.lastName === lastName)!;
-      return { employee } as EmployeeShifts;
-    });
-    const shift: DayShift = { dailyShift: dailyShiftEmployees, nightShift: nightShiftEmployees };
-    return {
-      date: entry.date,
-      weekDay: entry.date.getDay(),
-      shift,
-    } as ScheduleDay;
-  });
-
-const monthlyPlan: MonthlySchedulePlan = {
-  month: monthSchedule.month,
-  year: monthSchedule.year,
-  days: daysForHtml,
-};
-
-const htmlResult: ScheduleGenerationResult = {
-  schedule: monthlyPlan,
-  warnings: [],
-  errors: [],
-};
-
-printHTMLScheduleTable(htmlResult, typedConfig);
+// Generate HTML file from shifts
+printHTMLFromShifts(shifts, typedConfig, monthSchedule);
 
 
