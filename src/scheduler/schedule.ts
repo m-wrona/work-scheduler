@@ -120,15 +120,6 @@ export function sortEmployeeShifts(employeeShifts: Map<string, EmployeeShift>, n
     let remaining = [...employeeShifts.values()];
     const order: EmployeeShift[] = [];
 
-    // if (night) {
-    //     order.push(
-    //         ...remaining
-    //             .filter(e => e.lastShiftNight)
-    //             .sort(nightEmployeeShiftComparator)
-    //     );
-    //     remaining = remaining.filter(e => !order.includes(e));
-    // }
-
     if (!night) {
         order.push(...remaining.filter(e => e.lastDate === null));
         remaining = remaining.filter(e => e.lastDate !== null);
@@ -151,13 +142,6 @@ export function isAvailable(employeeShift: EmployeeShift, date: Date, night: boo
     return employeeShift.nextNotSoonerThan === null || date >= employeeShift.nextNotSoonerThan;
 }
 
-export function nightEmployeeShiftComparator(a: EmployeeShift, b: EmployeeShift): number {
-    if (a.nextNotSoonerThan !== null && b.nextNotSoonerThan !== null) {
-        return a.nextNotSoonerThan.getTime() - b.nextNotSoonerThan.getTime();
-    }
-    return dailyEmployeeShiftComparator(a, b);
-}
-
 export function lastDateShiftComparator(a: EmployeeShift, b: EmployeeShift): number {
     if (a.lastDate !== null && b.lastDate !== null) {
         return a.lastDate.getTime() - b.lastDate.getTime();
@@ -167,30 +151,3 @@ export function lastDateShiftComparator(a: EmployeeShift, b: EmployeeShift): num
     }
     return 1;
 }
-
-export function dailyEmployeeShiftComparator(a: EmployeeShift, b: EmployeeShift): number {
-    // nextNotLaterThan is the most important criterion, so we sort by it first
-    if (a.nextNotLaterThan !== null && b.nextNotLaterThan !== null) {
-        return a.nextNotLaterThan.getTime() - b.nextNotLaterThan.getTime();
-    }
-    if (a.nextNotLaterThan !== null && b.nextNotLaterThan === null) {
-        return -1;
-    }
-    if (a.nextNotLaterThan === null && b.nextNotLaterThan !== null) {
-        return 1;
-    }
-
-    if (a.nextNotSoonerThan === null && b.nextNotSoonerThan === null) {
-        return 0;
-    }
-    if (a.nextNotSoonerThan !== null && b.nextNotSoonerThan === null) {
-        return -1;
-    }
-    if (a.nextNotSoonerThan === null && b.nextNotSoonerThan !== null) {
-        return 1;
-    }
-    return a.nextNotSoonerThan!.getTime() - b.nextNotSoonerThan!.getTime();
-}
-
-
-
