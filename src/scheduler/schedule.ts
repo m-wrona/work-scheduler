@@ -2,7 +2,7 @@ import type { Employee, WorkSchedulerConfig } from "../types/config";
 import type { MonthSchedule } from "./calendar";
 import type { EmployeeShift, Schedule, Shift } from "./model";
 import type { Rule } from "./rules";
-import { Rules } from "./rules";
+import { Rules, shiftPattern } from "./rules";
 import { newEmployeeShift, cloneEmployeeShift } from "./model";
 
 
@@ -29,19 +29,21 @@ export function nextShift(
             ])
     );
 
+    let employeeOrder = sortEmployeeShifts(employeeShifts, night);
     planning: for (let i = 0; i < maxTries; i++) {
         const shiftEmployees = createShift(
             date,
-            employeeShifts,
+            employeeOrder,
             cfg,
             schedule,
             rules,
             night,
         )
 
-        if (shiftEmployees!.length != cfg.shifts.employeesPerShift) {
+        if (shiftEmployees == null) {
             // not able to plan a shift for given state 
-            // break;
+            employeeOrder = shuffleArray(employeeOrder);
+            continue planning;
         }
 
         for (const e of shiftEmployees) {
@@ -66,25 +68,22 @@ export function nextShift(
         );
     }
 
-    return null;
+    return prevShifts;
 }
 
 export function createShift(
     date: Date,
-    employeeShifts: Map<string, EmployeeShift>,
+    employeeOrder: EmployeeShift[],
     cfg: WorkSchedulerConfig,
     schedule: MonthSchedule,
     rules: Rule[],
     night: boolean,
-): EmployeeShift[] {
-
-    var shift: EmployeeShift[] = [];
-
-    const employeeOrder = sortEmployeeShifts(employeeShifts, night);
+): EmployeeShift[] | null {
+    const shift: EmployeeShift[] = [];
 
     for (const employeeShift of employeeOrder) {
         if (shift.length >= cfg.shifts.employeesPerShift) {
-            break;
+            return shift;
         }
 
         if (!isAvailable(employeeShift, date, night)) {
@@ -105,15 +104,15 @@ export function createShift(
         );
         e.hours += cfg.shifts.defaultShiftLength;
         e.lastShiftNight = night;
+        e.shiftPattern.push(night);
 
-        const ruleOK = rules.every(rule => rule(employeeShift, cfg, schedule, date, night));
+        const ruleOK = rules.every(rule => rule(e, cfg, schedule, date, night));
         if (ruleOK) {
             shift.push(e);
         }
 
     }
-
-    return shift;
+    return null;
 }
 
 export function sortEmployeeShifts(employeeShifts: Map<string, EmployeeShift>, night: boolean): EmployeeShift[] {
@@ -124,9 +123,9 @@ export function sortEmployeeShifts(employeeShifts: Map<string, EmployeeShift>, n
         order.push(...remaining.filter(e => e.lastDate === null));
         remaining = remaining.filter(e => e.lastDate !== null);
     }
-    
+
     order.push(...remaining.sort(lastDateShiftComparator));
-    
+
     return order;
 }
 
@@ -150,4 +149,19 @@ export function lastDateShiftComparator(a: EmployeeShift, b: EmployeeShift): num
         return -1;
     }
     return 1;
+}
+
+/**
+ * Shuffles an array using the Fisher-Yates algorithm.
+ * Returns a new array, leaving the original unchanged.
+ */
+export function shuffleArray<T>(array: T[]): T[] {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const temp = shuffled[i]!;
+        shuffled[i] = shuffled[j]!;
+        shuffled[j] = temp;
+    }
+    return shuffled;
 }

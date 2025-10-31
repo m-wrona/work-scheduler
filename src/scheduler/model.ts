@@ -13,6 +13,7 @@ export interface EmployeeShift {
     nextNotSoonerThan: Date | null;
     nextNotLaterThan: Date | null;
     hours: number;
+    shiftPattern: boolean[];
 }
 
 export interface Schedule {
@@ -33,7 +34,8 @@ export function cloneEmployeeShift(employeeShift: EmployeeShift): EmployeeShift 
         nextNotLaterThan: employeeShift.nextNotLaterThan,
         hours: employeeShift.hours,
         lastShiftNight: employeeShift.lastShiftNight,
-    };
+        shiftPattern: [...employeeShift.shiftPattern],
+    };  
 }
 
 export function newEmployeeShift(employee: Employee): EmployeeShift {
@@ -44,5 +46,6 @@ export function newEmployeeShift(employee: Employee): EmployeeShift {
         nextNotLaterThan: null,
         hours: 0,
         lastShiftNight: false,
+        shiftPattern: [],
     };
 }

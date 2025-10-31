@@ -2,7 +2,7 @@ import { createShift, nextShift } from '../schedule';
 import type { Employee, WorkSchedulerConfig } from '../../types/config';
 import type { EmployeeShift, Shift } from '../model';
 import type { MonthSchedule } from '../calendar';
-import { workingHoursWithinLimits, type Rule } from '../rules';
+import { shiftPattern, workingHoursWithinLimits, type Rule } from '../rules';
 import { newEmployeeShift } from '../model';
 
 describe('nextShift', () => {
@@ -131,6 +131,7 @@ describe('nextShift', () => {
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
                             lastShiftNight: false,
+                            shiftPattern: [],
                         },
                         {
                             employee: employees.get('2')!.employee,
@@ -139,6 +140,7 @@ describe('nextShift', () => {
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
                             lastShiftNight: false,
+                            shiftPattern: [],
                         },
                         {
                             employee: employees.get('3')!.employee,
@@ -147,6 +149,7 @@ describe('nextShift', () => {
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
                             lastShiftNight: false,
+                            shiftPattern: [],
                         },
                         {
                             employee: employees.get('4')!.employee,
@@ -155,6 +158,7 @@ describe('nextShift', () => {
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
                             lastShiftNight: false,
+                            shiftPattern: [],
                         },
                     ],
                     night: false,
@@ -192,6 +196,7 @@ describe('nextShift', () => {
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
                             lastShiftNight: false,
+                            shiftPattern: [],
                         },
                         {
                             employee: employees.get('2')!.employee,
@@ -200,6 +205,7 @@ describe('nextShift', () => {
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
                             lastShiftNight: false,
+                            shiftPattern: [],
                         },
                         {
                             employee: employees.get('3')!.employee,
@@ -208,6 +214,7 @@ describe('nextShift', () => {
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
                             lastShiftNight: false,
+                            shiftPattern: [],
                         },
                         {
                             employee: employees.get('4')!.employee,
@@ -216,6 +223,7 @@ describe('nextShift', () => {
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
                             lastShiftNight: false,
+                            shiftPattern: [],
                         },
                     ],
                     night: false,
@@ -254,6 +262,7 @@ describe('nextShift', () => {
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
                             lastShiftNight: false,
+                            shiftPattern: [],
                         },
                         {
                             employee: employees.get('2')!.employee,
@@ -262,6 +271,7 @@ describe('nextShift', () => {
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
                             lastShiftNight: false,
+                            shiftPattern: [],
                         },
                         {
                             employee: employees.get('3')!.employee,
@@ -270,6 +280,7 @@ describe('nextShift', () => {
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
                             lastShiftNight: false,
+                            shiftPattern: [],
                         },
                         {
                             employee: employees.get('4')!.employee,
@@ -278,6 +289,7 @@ describe('nextShift', () => {
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
                             lastShiftNight: false,
+                            shiftPattern: [],
                         },
                     ],
                     night: false,
@@ -316,6 +328,7 @@ describe('nextShift', () => {
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
                             lastShiftNight: false,
+                            shiftPattern: [],
                         },
                         {
                             employee: employees.get('2')!.employee,
@@ -324,6 +337,7 @@ describe('nextShift', () => {
                             nextNotLaterThan: new Date(2025, 9, 6),
                             hours: 7.58,
                             lastShiftNight: false,
+                            shiftPattern: [],
                         },
                         {
                             employee: employees.get('3')!.employee,
@@ -332,6 +346,7 @@ describe('nextShift', () => {
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
                             lastShiftNight: false,
+                            shiftPattern: [],
                         },
                         {
                             employee: employees.get('4')!.employee,
@@ -340,6 +355,7 @@ describe('nextShift', () => {
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
                             lastShiftNight: false,
+                            shiftPattern: [],
                         },
                     ],
                     night: false,
@@ -378,6 +394,7 @@ describe('nextShift', () => {
                             nextNotLaterThan: new Date(2025, 9, 6),
                             hours: 7.58,
                             lastShiftNight: false,
+                            shiftPattern: [],
                         },
                         {
                             employee: employees.get('2')!.employee,
@@ -386,6 +403,7 @@ describe('nextShift', () => {
                             nextNotLaterThan: new Date(2025, 9, 5),
                             hours: 7.58,
                             lastShiftNight: false,
+                            shiftPattern: [],
                         },
                         {
                             employee: employees.get('3')!.employee,
@@ -394,6 +412,7 @@ describe('nextShift', () => {
                             nextNotLaterThan: new Date(2025, 9, 6),
                             hours: 7.58,
                             lastShiftNight: false,
+                            shiftPattern: [],
                         },
                         {
                             employee: employees.get('4')!.employee,
@@ -402,6 +421,7 @@ describe('nextShift', () => {
                             nextNotLaterThan: new Date(2025, 9, 7),
                             hours: 7.58,
                             lastShiftNight: false,
+                            shiftPattern: [],
                         },
                     ],
                     night: false,
@@ -496,12 +516,13 @@ describe('nextShift', () => {
         beforeEach(() => {
             rules = [
                 workingHoursWithinLimits,
+                shiftPattern,
             ];
         });
 
 
         it('should create day and night shift for 1st day', () => {
-            const result = nextShift(config, schedule, 0, prevShifts, employees, rules, false, 1);
+            const result = nextShift(config, schedule, 0, prevShifts, employees, rules, false, 5);
 
             const dayIdx = 0;
             expect(result).toHaveLength(14);

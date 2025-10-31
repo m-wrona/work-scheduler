@@ -2,18 +2,12 @@ import config from './config.json';
 import type { WorkSchedulerConfig } from './src/types/config';
 import { isValidConfig } from './src/types/config';
 import { createMonthSchedule, getCurrentYear } from './src/scheduler/calendar';
-import { generateMonthlySchedule } from './src/scheduler/planner';
-import { Table } from 'console-table-printer';
 import { printHTMLFromShifts } from './src/html-generator';
 import { nextShift } from './src/scheduler/schedule';
 import { newEmployeeShift } from './src/scheduler/model';
 
 const typedConfig: WorkSchedulerConfig = config;
 
-// console.log('\nFull Configuration Object:');
-// console.log(JSON.stringify(typedConfig, null, 2));
-
-// Validate config
 if (!isValidConfig(typedConfig)) {
   console.error('Invalid configuration format!');
   process.exit(1);
@@ -72,7 +66,6 @@ if (shifts === null) {
   process.exit(1);
 }
 
-// Generate HTML file from shifts
 printHTMLFromShifts(shifts, typedConfig, monthSchedule);
 
 
