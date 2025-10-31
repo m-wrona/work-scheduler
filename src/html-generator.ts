@@ -34,12 +34,13 @@ export function generateHTMLScheduleTable(scheduleResult: ScheduleGenerationResu
   };
   
   // Create header row with day classes
-  const headerRow: (string | { value: string; classes: string })[] = ['Name', ...dayNumbers.map(d => ({ value: d.toString(), classes: getDayClasses(d) }))];
+  const headerRow: (string | { value: string; classes: string })[] = ['Name', ...dayNumbers.map(d => ({ value: d.toString(), classes: getDayClasses(d) })), 'Total Hours'];
   
   // Create employee schedule data
   const employeeSchedules = config.employees.map((emp, index) => {
     const employeeName = `${index + 1}. ${emp.firstName} ${emp.lastName}`;
     const dayShifts = new Array(daysInMonth).fill('');
+    let shiftCount = 0;
     
     // Fill in the shifts for each day
     schedule.days.forEach(day => {
@@ -53,12 +54,17 @@ export function generateHTMLScheduleTable(scheduleResult: ScheduleGenerationResu
       
       if (isInDailyShift) {
         dayShifts[dayIndex] = 'D';
+        shiftCount++;
       } else if (isInNightShift) {
         dayShifts[dayIndex] = 'N';
+        shiftCount++;
       }
     });
     
-    return [employeeName, ...dayShifts];
+    // Calculate total hours (shift count * shift length)
+    const totalHours = (shiftCount * config.shifts.defaultShiftLength).toFixed(2);
+    
+    return [employeeName, ...dayShifts, totalHours];
   });
   
   // Generate HTML table
@@ -69,6 +75,9 @@ export function generateHTMLScheduleTable(scheduleResult: ScheduleGenerationResu
   headerRow.forEach((cell, index) => {
     if (index === 0) {
       html += `      <th>${cell}</th>\n`;
+    } else if (typeof cell === 'string') {
+      // Last column (Total Hours)
+      html += `      <th class="total-hours-header">${cell}</th>\n`;
     } else {
       const cellData = cell as { value: string; classes: string };
       const classAttr = cellData.classes ? ` class="${cellData.classes}"` : '';
@@ -79,12 +88,16 @@ export function generateHTMLScheduleTable(scheduleResult: ScheduleGenerationResu
   
   // Data rows
   html += '  <tbody>\n';
+  const totalHoursColumnIndex = daysInMonth + 1; // Name column + all day columns
   employeeSchedules.forEach(row => {
     html += '    <tr>\n';
     row.forEach((cell, index) => {
       let classAttr = '';
       if (index === 0) {
         classAttr = 'class="employee-name"';
+      } else if (index === totalHoursColumnIndex) {
+        // Last column (Total Hours)
+        classAttr = 'class="total-hours"';
       } else {
         // Apply day classes to data cells (index is the day number since column 0 is employee name)
         const dayNumber = index;
@@ -143,8 +156,21 @@ export function printHTMLScheduleTable(scheduleResult: ScheduleGenerationResult,
             font-weight: bold;
             text-align: left;
         }
+        .total-hours-header {
+            background-color: #4a90e2;
+            color: white;
+            font-weight: bold;
+        }
+        .total-hours {
+            background-color: #e8f4f8;
+            font-weight: bold;
+            color: #2c3e50;
+        }
         tr:nth-child(even) {
             background-color: #f9f9f9;
+        }
+        tr:nth-child(even) .total-hours {
+            background-color: #d4e9f0;
         }
         tr:hover {
             background-color: #f0f8ff;
@@ -287,8 +313,21 @@ export function printHTMLFromShifts(shifts: Shift[], config: WorkSchedulerConfig
             font-weight: bold;
             text-align: left;
         }
+        .total-hours-header {
+            background-color: #4a90e2;
+            color: white;
+            font-weight: bold;
+        }
+        .total-hours {
+            background-color: #e8f4f8;
+            font-weight: bold;
+            color: #2c3e50;
+        }
         tr:nth-child(even) {
             background-color: #f9f9f9;
+        }
+        tr:nth-child(even) .total-hours {
+            background-color: #d4e9f0;
         }
         tr:hover {
             background-color: #f0f8ff;
