@@ -14,7 +14,7 @@ export function nextShift(
     employeeShifts: Map<string, EmployeeShift>,
     rules: Rule[] = Rules,
     night: boolean = false,
-    maxTries: number = 10,
+    maxTries: number = 20,
 ): Shift[] | null {
     if (dayIdx >= schedule.workingDaysList.length) {
         return prevShifts;

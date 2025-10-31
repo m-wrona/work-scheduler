@@ -72,8 +72,6 @@ const shifts = nextShift(
   new Map(typedConfig.employees.map(e => [e.id.toString(), newEmployeeShift(e)])), 
 );
 
-console.log(shifts[0]);
-
 if (shifts === null) {
   console.error('Failed to generate schedule');
   process.exit(1);

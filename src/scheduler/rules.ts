@@ -28,7 +28,7 @@ export function workingHoursWithinLimits(
     const hoursPerMonth = employeeShift.hoursPerMonth.get(monthKey) || 0;
     const monthStats = schedule.monthlyBreakdown.find(m => m.month === monthIndex && m.year === year);
 
-    return hoursPerMonth <= monthStats!.totalWorkingHours &&
+    return hoursPerMonth <= monthStats!.totalWorkingHours + cfg.shifts.defaultShiftLength &&
         employeeShift.hours <= schedule.totalWorkingHours;
 }
 
