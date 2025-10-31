@@ -22,7 +22,13 @@ export function workingHoursWithinLimits(
     day: Date,
     night: boolean,
 ): boolean {
-    return employeeShift.hours <= schedule.totalWorkingHours;
+    const monthIndex = day.getMonth() + 1;
+    const year = day.getUTCFullYear();
+    const hoursPerMonth = employeeShift.hoursPerMonth.get(day.getMonth()) || 0;
+    const monthStats = schedule.monthlyBreakdown.find(m => m.month === monthIndex && m.year === year);
+
+    return hoursPerMonth <= monthStats!.totalWorkingHours &&
+        employeeShift.hours <= schedule.totalWorkingHours;
 }
 
 export function shiftPattern(
@@ -40,7 +46,7 @@ export function shiftPattern(
 
     let lastShift = employeeShift.shiftPattern[0];
     let pattern = 0;
-    
+
 
     for (const shift of employeeShift.shiftPattern) {
         if (pattern >= patternLength) {

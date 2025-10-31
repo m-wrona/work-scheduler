@@ -13,6 +13,7 @@ export interface EmployeeShift {
     nextNotSoonerThan: Date | null;
     nextNotLaterThan: Date | null;
     hours: number;
+    hoursPerMonth : Map<number, number>;
     shiftPattern: boolean[];
 }
 
@@ -35,6 +36,7 @@ export function cloneEmployeeShift(employeeShift: EmployeeShift): EmployeeShift 
         hours: employeeShift.hours,
         lastShiftNight: employeeShift.lastShiftNight,
         shiftPattern: [...employeeShift.shiftPattern],
+        hoursPerMonth: new Map(employeeShift.hoursPerMonth),
     };  
 }
 
@@ -47,5 +49,6 @@ export function newEmployeeShift(employee: Employee): EmployeeShift {
         hours: 0,
         lastShiftNight: false,
         shiftPattern: [],
+        hoursPerMonth: new Map(),
     };
 }

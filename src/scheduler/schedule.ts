@@ -1,9 +1,9 @@
-import type { Employee, WorkSchedulerConfig } from "../types/config";
+import type { WorkSchedulerConfig } from "../types/config";
 import type { MonthSchedule } from "./calendar";
 import type { EmployeeShift, Schedule, Shift } from "./model";
 import type { Rule } from "./rules";
-import { Rules, shiftPattern } from "./rules";
-import { newEmployeeShift, cloneEmployeeShift } from "./model";
+import { Rules } from "./rules";
+import { cloneEmployeeShift } from "./model";
 
 
 export function nextShift(
@@ -103,6 +103,7 @@ export function createShift(
             date.getDate() + cfg.shifts.maxDaysFreeBetweenShifts,
         );
         e.hours += cfg.shifts.defaultShiftLength;
+        e.hoursPerMonth.set(date.getMonth(), (e.hoursPerMonth.get(date.getMonth()) || 0) + cfg.shifts.defaultShiftLength);
         e.lastShiftNight = night;
         e.shiftPattern.push(night);
 
