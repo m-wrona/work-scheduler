@@ -117,8 +117,26 @@ export function createShift(
 }
 
 export function sortEmployeeShifts(employeeShifts: Map<string, EmployeeShift>, night: boolean): EmployeeShift[] {
-    return [...employeeShifts.values()].
-        sort(night ? nightEmployeeShiftComparator : dailyEmployeeShiftComparator);
+    let remaining = [...employeeShifts.values()];
+    const order: EmployeeShift[] = [];
+
+    // if (night) {
+    //     order.push(
+    //         ...remaining
+    //             .filter(e => e.lastShiftNight)
+    //             .sort(nightEmployeeShiftComparator)
+    //     );
+    //     remaining = remaining.filter(e => !order.includes(e));
+    // }
+
+    if (!night) {
+        order.push(...remaining.filter(e => e.lastDate === null));
+        remaining = remaining.filter(e => e.lastDate !== null);
+    }
+    
+    order.push(...remaining.sort(lastDateShiftComparator));
+    
+    return order;
 }
 
 export function isAvailable(employeeShift: EmployeeShift, date: Date, night: boolean): boolean {
@@ -138,6 +156,16 @@ export function nightEmployeeShiftComparator(a: EmployeeShift, b: EmployeeShift)
         return a.nextNotSoonerThan.getTime() - b.nextNotSoonerThan.getTime();
     }
     return dailyEmployeeShiftComparator(a, b);
+}
+
+export function lastDateShiftComparator(a: EmployeeShift, b: EmployeeShift): number {
+    if (a.lastDate !== null && b.lastDate !== null) {
+        return a.lastDate.getTime() - b.lastDate.getTime();
+    }
+    if (a.lastDate !== null && b.lastDate === null) {
+        return -1;
+    }
+    return 1;
 }
 
 export function dailyEmployeeShiftComparator(a: EmployeeShift, b: EmployeeShift): number {
