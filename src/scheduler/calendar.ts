@@ -37,7 +37,7 @@ export function createMonthSchedule(
   const startDay = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0));
   const endDay = new Date(Date.UTC(year, month + monthsCount - 1, 1, 0, 0, 0, 0));
   const holidayDates: Date[] = [];
-  
+
   for (const holidayStr of holidays) {
     // Try parsing with the config year, but also check if it might be next year (for year-end holidays)
     const holidayDate = parseHolidayDate(holidayStr, year);
@@ -95,7 +95,6 @@ export function createMonthSchedule(
       monthStats.workingDays++;
     }
 
-    // Track holidays per month
     if (isHoliday) {
       const holidayDate = holidayDates.find(h => h.toISOString().slice(0, 10) === currentDateString);
       if (holidayDate && !monthStats.holidays.some(h => h.getTime() === holidayDate.getTime())) {

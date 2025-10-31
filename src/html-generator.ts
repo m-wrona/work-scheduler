@@ -296,7 +296,7 @@ export function printHTMLFromShifts(shifts: Shift[], config: WorkSchedulerConfig
         <div class="summary-item"><span class="summary-label">Holidays:</span> ${monthStats.holidays.length > 0 ? monthStats.holidays.map(h => h.toString()).join(', ') : 'None'}</div>
         <div class="summary-item"><span class="summary-label">Total working hours:</span> ${monthStats.totalWorkingHours} hours</div>
         <div class="summary-item"><span class="summary-label">Shifts number:</span> ${monthStats.shiftsNumber}</div>
-        <div class="summary-item"><span class="summary-label">1st day of schedule:</span> ${monthStats.workingDaysList[0]?.toISOString() || 'N/A'}</div>
+        <div class="summary-item"><span class="summary-label">First day of schedule:</span> ${monthStats.workingDaysList[0]?.toISOString() || 'N/A'}</div>
         <div class="summary-item"><span class="summary-label">Last day of schedule:</span> ${monthStats.workingDaysList[monthStats.workingDaysList.length - 1]?.toISOString() || 'N/A'}</div>
       </div>
     ` : `

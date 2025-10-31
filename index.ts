@@ -41,7 +41,7 @@ const monthSchedule = createMonthSchedule(
   typedConfig.schedule.holidays,
 );
 
-console.log('\nMonthly Schedule Calculation:');
+console.log('\nSchedule Calculation:');
 console.log('=============================');
 console.log(`Month: ${monthSchedule.month}/${monthSchedule.year}`);
 console.log(`Working days (Mon-Fri): ${monthSchedule.workingDays}`);
