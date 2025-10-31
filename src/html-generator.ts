@@ -378,6 +378,62 @@ export function printHTMLFromShifts(shifts: Shift[], config: WorkSchedulerConfig
   const scheduleFirst = scheduleMonths[0];
   const scheduleLast = scheduleMonths[scheduleMonths.length - 1];
   
+  // Calculate total working hours for the entire schedule
+  const totalScheduleWorkingHours = scheduleMonths.reduce((sum, monthStats) => sum + monthStats.totalWorkingHours, 0);
+  
+  // Calculate total hours per employee across all shifts
+  const employeeTotals = new Map<number, number>();
+  for (const shift of shifts) {
+    for (const empShift of shift.employees) {
+      const empId = empShift.employee.id;
+      const currentTotal = employeeTotals.get(empId) || 0;
+      employeeTotals.set(empId, currentTotal + config.shifts.defaultShiftLength);
+    }
+  }
+  
+  // Build employee summary table
+  const employeeSummaryRows = config.employees.map((emp, index) => {
+    const employeeName = `${index + 1}. ${emp.firstName} ${emp.lastName}`;
+    const totalHoursPlanned = employeeTotals.get(emp.id) || 0;
+    const remainingHours = totalHoursPlanned - totalScheduleWorkingHours;
+    let remainingHoursStr = '';
+    if (remainingHours > 0) {
+      remainingHoursStr = `+${remainingHours.toFixed(1)}h`;
+    } else if (remainingHours < 0) {
+      remainingHoursStr = `${remainingHours.toFixed(1)}h`;
+    } else {
+      remainingHoursStr = '0h';
+    }
+    
+    return `
+      <tr>
+        <td class="employee-name">${employeeName}</td>
+        <td class="total-hours">${totalHoursPlanned.toFixed(2)}</td>
+        <td>${totalScheduleWorkingHours.toFixed(2)}</td>
+        <td class="remaining-hours">${remainingHoursStr}</td>
+      </tr>
+    `;
+  }).join('\n');
+  
+  const employeeSummaryTable = `
+    <div style="margin: 40px auto; max-width: 800px;">
+      <h2 style="text-align: center; color: #333; margin-bottom: 20px;">Employee Summary</h2>
+      <table style="width: 100%;">
+        <thead>
+          <tr>
+            <th style="text-align: left; padding: 10px; background-color: #f0f0f0;">Employee</th>
+            <th class="total-hours-header" style="padding: 10px;">Total Hours Planned</th>
+            <th style="padding: 10px; background-color: #e8f4f8;">Total Working Hours Available</th>
+            <th class="remaining-hours-header" style="padding: 10px;">Remaining Hours</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${employeeSummaryRows}
+        </tbody>
+      </table>
+    </div>
+  `;
+  
   // Build a single HTML document containing all monthly tables
   const first = monthlySections[0];
   const last = monthlySections[monthlySections.length - 1];
@@ -497,6 +553,7 @@ export function printHTMLFromShifts(shifts: Shift[], config: WorkSchedulerConfig
       ${s.summaryHtml}
       ${s.tableHtml}
     `).join('\n')}
+    ${employeeSummaryTable}
   </body>
   </html>`;
 
