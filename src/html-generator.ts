@@ -11,8 +11,8 @@ export function generateHTMLScheduleTable(scheduleResult: ScheduleGenerationResu
   const month = schedule.month;
   const year = schedule.year;
   
-  // Get all days in the month
-  const daysInMonth = new Date(year, month, 0).getDate();
+  // Get all days in the month using UTC to match date storage
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
   const dayNumbers = Array.from({ length: daysInMonth }, (_, i) => i + 1);
   
   // Helper function to get day classes for a specific date
@@ -64,8 +64,22 @@ export function generateHTMLScheduleTable(scheduleResult: ScheduleGenerationResu
     // Fill in the shifts for each day
     schedule.days.forEach(day => {
       // Use UTC methods to match how dates are stored
+      const dayMonth = day.date.getUTCMonth() + 1;
+      const dayYear = day.date.getUTCFullYear();
       const dayNumber = day.date.getUTCDate();
       const dayIndex = dayNumber - 1;
+      
+      // Validate that the day belongs to the current month/year being displayed
+      if (dayMonth !== month || dayYear !== year) {
+        console.warn(`Skipping shift for date ${day.date.toISOString().slice(0, 10)} - belongs to ${dayMonth}/${dayYear}, not ${month}/${year}`);
+        return;
+      }
+      
+      // Validate that the day is within the month range
+      if (dayIndex < 0 || dayIndex >= daysInMonth) {
+        console.warn(`Skipping shift for day ${dayNumber} (index ${dayIndex}) - out of range for month ${month}/${year}`);
+        return;
+      }
       
       // Check if employee is in daily shift
       const isInDailyShift = day.shift.dailyShift.some(shift => shift.employee.id === emp.id);
@@ -244,7 +258,13 @@ export function printHTMLFromShifts(shifts: Shift[], config: WorkSchedulerConfig
     for (const shift of monthShifts) {
       const dateKey = shift.date.toISOString().slice(0, 10);
       if (!perDay.has(dateKey)) {
-        perDay.set(dateKey, { date: shift.date, daily: [], night: [] });
+        // Normalize date to UTC midnight to ensure consistent date representation
+        const normalizedDate = new Date(Date.UTC(
+          shift.date.getUTCFullYear(),
+          shift.date.getUTCMonth(),
+          shift.date.getUTCDate()
+        ));
+        perDay.set(dateKey, { date: normalizedDate, daily: [], night: [] });
       }
       const entry = perDay.get(dateKey)!;
       const employeeShifts: EmployeeShifts[] = shift.employees.map(e => ({ employee: e.employee }));
