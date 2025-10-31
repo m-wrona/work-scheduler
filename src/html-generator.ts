@@ -305,10 +305,34 @@ export function printHTMLFromShifts(shifts: Shift[], config: WorkSchedulerConfig
             background-color: #FFB6C1;
             color: #8B008B;
         }
+        .summary {
+            background-color: white;
+            padding: 20px;
+            margin: 0 auto 30px auto;
+            max-width: 800px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 5px;
+        }
+        .summary-item {
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        .summary-label {
+            font-weight: bold;
+            color: #555;
+        }
     </style>
   </head>
   <body>
     <h1>Work Schedule - ${titleRange}</h1>
+    <div class="summary">
+      <div class="summary-item"><span class="summary-label">Working days (Mon-Fri):</span> ${monthSchedule.workingDays}</div>
+      <div class="summary-item"><span class="summary-label">Holidays:</span> ${monthSchedule.holidays.map(h => h.toString()).join(', ')}</div>
+      <div class="summary-item"><span class="summary-label">Total working hours:</span> ${monthSchedule.totalWorkingHours} hours</div>
+      <div class="summary-item"><span class="summary-label">Shifts number:</span> ${monthSchedule.shiftsNumber}</div>
+      <div class="summary-item"><span class="summary-label">1st day of schedule:</span> ${monthSchedule.workingDaysList[0]?.toISOString() || 'N/A'}</div>
+      <div class="summary-item"><span class="summary-label">Last day of schedule:</span> ${monthSchedule.workingDaysList[monthSchedule.workingDaysList.length - 1]?.toISOString() || 'N/A'}</div>
+    </div>
     ${monthlySections.map(s => `
       <h2>${s.month}/${s.year}</h2>
       ${s.tableHtml}

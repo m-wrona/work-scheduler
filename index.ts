@@ -44,7 +44,6 @@ const monthSchedule = createMonthSchedule(
 console.log('\nMonthly Schedule Calculation:');
 console.log('=============================');
 console.log(`Month: ${monthSchedule.month}/${monthSchedule.year}`);
-console.log(`Total days in month: ${monthSchedule.totalDays}`);
 console.log(`Working days (Mon-Fri): ${monthSchedule.workingDays}`);
 console.log(`Holidays: ${monthSchedule.holidays}`);
 console.log(`Total working hours: ${monthSchedule.totalWorkingHours} hours`);
