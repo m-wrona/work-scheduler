@@ -1,4 +1,5 @@
 import type { WorkSchedulerConfig } from './types/config';
+import { parseHolidayDate } from './types/config';
 import type { ScheduleGenerationResult, ScheduleDay, DayShift, EmployeeShifts, MonthlySchedulePlan } from './types/schedule';
 import type { Shift } from './scheduler/model';
 import type { MonthSchedule } from './scheduler/calendar';
@@ -19,7 +20,13 @@ export function generateHTMLScheduleTable(scheduleResult: ScheduleGenerationResu
   const getDayClasses = (dayNumber: number): string => {
     const date = new Date(year, month - 1, dayNumber);
     const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
-    const isHoliday = config.schedule.holidays.includes(dayNumber);
+    
+    // Check if this date is a holiday by comparing with parsed holiday dates
+    const dateString = date.toISOString().slice(0, 10);
+    const isHoliday = config.schedule.holidays.some(holidayStr => {
+      const holidayDate = parseHolidayDate(holidayStr, year);
+      return holidayDate && holidayDate.toISOString().slice(0, 10) === dateString;
+    });
     
     let classes = [];
     
@@ -264,14 +271,18 @@ export function printHTMLFromShifts(shifts: Shift[], config: WorkSchedulerConfig
     const tableHtml = generateHTMLScheduleTable(htmlResult, config);
     
     // Calculate month-specific summary
-    // Filter holidays that fall in this specific month (check if day number is valid for the month)
-    const daysInMonth = new Date(year, month, 0).getDate();
-    const monthHolidays = config.schedule.holidays.filter(day => {
-      // Only include holidays that are valid day numbers for this month
-      if (day < 1 || day > daysInMonth) return false;
-      const holidayDate = new Date(Date.UTC(year, month - 1, day));
-      // Double-check the date is still in the correct month (handles edge cases)
-      return holidayDate.getMonth() + 1 === month && holidayDate.getFullYear() === year;
+    // Filter holidays that fall in this specific month
+    const monthStart = new Date(Date.UTC(year, month - 1, 1));
+    const monthEnd = new Date(Date.UTC(year, month, 1));
+    
+    const monthHolidays = config.schedule.holidays.filter(holidayStr => {
+      // Parse holiday and check if it falls within this month
+      const holidayDate = parseHolidayDate(holidayStr, year);
+      if (!holidayDate) return false;
+      
+      // Check if holiday falls in this month (handle year boundaries)
+      const holidayTime = holidayDate.getTime();
+      return holidayTime >= monthStart.getTime() && holidayTime < monthEnd.getTime();
     });
     
     const monthScheduleData = createMonthSchedule(

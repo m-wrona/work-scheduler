@@ -2,10 +2,11 @@
  * Calculate working days and hours for a given month
  */
 
+import { parseHolidayDate } from '../types/config';
+
 export interface MonthSchedule {
   month: number;
   year: number;
-  totalDays: number;
   workingDays: number;
   totalWorkingHours: number;
   shiftsNumber: number;
@@ -19,22 +20,44 @@ export function createMonthSchedule(
   monthsCount: number = 2,
   dailyHours: number = 8,
   shiftLength: number = 12,
-  holidays: number[] = [],
+  holidays: string[] = [], // Date strings in DD.MM format
 ): MonthSchedule {
-  const workingDays: Date[] = [];
-  let workingDaysCount = 0;
+  // Parse holiday date strings to Date objects, filtering by the date range
   const startDay = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0));
   const endDay = new Date(Date.UTC(year, month + monthsCount - 1, 1, 0, 0, 0, 0));
-  let totalDays = 0;
+  
+  const holidayDates: Date[] = [];
+  for (const holidayStr of holidays) {
+    // Try parsing with the config year, but also check if it might be next year (for year-end holidays)
+    const holidayDate = parseHolidayDate(holidayStr, year);
+    if (holidayDate && holidayDate.getTime() >= startDay.getTime() && holidayDate.getTime() < endDay.getTime()) {
+      holidayDates.push(holidayDate);
+    }
+    // Also check if holiday falls in next year (for schedules spanning year boundary)
+    const nextYearHoliday = parseHolidayDate(holidayStr, year + 1);
+    if (nextYearHoliday && nextYearHoliday.getTime() >= startDay.getTime() && nextYearHoliday.getTime() < endDay.getTime()) {
+      holidayDates.push(nextYearHoliday);
+    }
+  }
+  
+  // Create a Set for efficient holiday lookup by date string (YYYY-MM-DD)
+  const holidayDateStrings = new Set(
+    holidayDates.map(h => h.toISOString().slice(0, 10))
+  );
+
+  const workingDays: Date[] = [];
+  let workingDaysCount = 0;
 
   for (
     let currentDate = new Date(startDay);
     currentDate.getTime() < endDay.getTime();
     currentDate.setUTCDate(currentDate.getUTCDate() + 1)
   ) {
-    const day = currentDate.getUTCDate();
+    const currentDateString = currentDate.toISOString().slice(0, 10);
     const dayOfWeek = currentDate.getUTCDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-    if (!holidays.includes(day) &&dayOfWeek >= 1 && dayOfWeek <= 5) {
+    const isHoliday = holidayDateStrings.has(currentDateString);
+    
+    if (!isHoliday && dayOfWeek >= 1 && dayOfWeek <= 5) {
       workingDaysCount++;
     }
     workingDays.push(new Date(currentDate));
@@ -45,12 +68,11 @@ export function createMonthSchedule(
   return {
     month,
     year,
-    totalDays,
     workingDays: workingDaysCount,
     totalWorkingHours: totalWorkingHours,
     shiftsNumber: Math.floor(totalWorkingHours / shiftLength),
     workingDaysList: workingDays,
-    holidays: holidays.map(day => new Date(Date.UTC(year, month - 1, day))),
+    holidays: holidayDates,
   };
 }
 

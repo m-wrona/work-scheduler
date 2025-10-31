@@ -122,6 +122,6 @@
     "timezone": "UTC",
     "year": 2025,
     "month": 11,
-    "holidays": [ 10, 11 ]
+    "holidays": [ "10.11", "11.11" ]
   }
 }

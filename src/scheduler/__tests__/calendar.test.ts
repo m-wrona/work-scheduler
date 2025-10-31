@@ -31,7 +31,7 @@ describe('createMonthSchedule', () => {
     });
 
     it('should calculate correct working days for January 2024 with holidays', () => {
-      const holidays = [1, 2];
+      const holidays = ['1.1', '2.1'];
       const result = createMonthSchedule(1, 2024, 8, 12, holidays);
       
       // January 2024 has 31 days, starts on Monday
