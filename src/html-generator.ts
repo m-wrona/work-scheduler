@@ -18,14 +18,26 @@ export function generateHTMLScheduleTable(scheduleResult: ScheduleGenerationResu
   
   // Helper function to get day classes for a specific date
   const getDayClasses = (dayNumber: number): string => {
-    const date = new Date(year, month - 1, dayNumber);
-    const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
+    // Use UTC to match how dates are stored in the schedule
+    const date = new Date(Date.UTC(year, month - 1, dayNumber));
+    const dayOfWeek = date.getUTCDay(); // 0 = Sunday, 6 = Saturday
     
     // Check if this date is a holiday by comparing with parsed holiday dates
     const dateString = date.toISOString().slice(0, 10);
     const isHoliday = config.schedule.holidays.some(holidayStr => {
       const holidayDate = parseHolidayDate(holidayStr, year);
-      return holidayDate && holidayDate.toISOString().slice(0, 10) === dateString;
+      if (!holidayDate) return false;
+      
+      // Also check if the holiday might be in a different month/year within the schedule range
+      // Check with current year
+      const holidayDateString = holidayDate.toISOString().slice(0, 10);
+      if (holidayDateString === dateString) return true;
+      
+      // Check with next year (for schedules spanning year boundary)
+      const nextYearHoliday = parseHolidayDate(holidayStr, year + 1);
+      if (nextYearHoliday && nextYearHoliday.toISOString().slice(0, 10) === dateString) return true;
+      
+      return false;
     });
     
     let classes = [];
@@ -52,7 +64,8 @@ export function generateHTMLScheduleTable(scheduleResult: ScheduleGenerationResu
     
     // Fill in the shifts for each day
     schedule.days.forEach(day => {
-      const dayNumber = day.date.getDate();
+      // Use UTC methods to match how dates are stored
+      const dayNumber = day.date.getUTCDate();
       const dayIndex = dayNumber - 1;
       
       // Check if employee is in daily shift
@@ -216,8 +229,9 @@ export function printHTMLFromShifts(shifts: Shift[], config: WorkSchedulerConfig
   // Group shifts by month/year (supports ranges spanning two months)
   const shiftsByMonth = new Map<string, Shift[]>();
   for (const s of shifts) {
-    const y = s.date.getFullYear();
-    const m = s.date.getMonth() + 1; // 1-12
+    // Use UTC methods to match how dates are stored
+    const y = s.date.getUTCFullYear();
+    const m = s.date.getUTCMonth() + 1; // 1-12
     const key = `${y}-${m}`;
     if (!shiftsByMonth.has(key)) shiftsByMonth.set(key, []);
     shiftsByMonth.get(key)!.push(s);
@@ -248,14 +262,15 @@ export function printHTMLFromShifts(shifts: Shift[], config: WorkSchedulerConfig
         const shift: DayShift = { dailyShift: entry.daily, nightShift: entry.night };
         return {
           date: entry.date,
-          weekDay: entry.date.getDay(),
+          weekDay: entry.date.getUTCDay(), // Use UTC to match date storage
           shift,
         } as ScheduleDay;
       });
 
     const sampleDate = monthShifts[0]!.date;
-    const month = sampleDate.getMonth() + 1;
-    const year = sampleDate.getFullYear();
+    // Use UTC methods to match how dates are stored
+    const month = sampleDate.getUTCMonth() + 1;
+    const year = sampleDate.getUTCFullYear();
     const monthlyPlan: MonthlySchedulePlan = {
       month,
       year,
