@@ -153,13 +153,18 @@ export function generateHTMLScheduleTable(scheduleResult: ScheduleGenerationResu
 export function printHTMLScheduleTable(scheduleResult: ScheduleGenerationResult, config: WorkSchedulerConfig): void {
   const htmlTable = generateHTMLScheduleTable(scheduleResult, config);
   
+  // Extract month/year from first day using UTC to ensure consistency
+  const firstDay = scheduleResult.schedule.days[0];
+  const month = firstDay ? firstDay.date.getUTCMonth() + 1 : scheduleResult.schedule.month;
+  const year = firstDay ? firstDay.date.getUTCFullYear() : scheduleResult.schedule.year;
+  
   // Create a complete HTML document
   const htmlDocument = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Work Schedule - ${scheduleResult.schedule.month}/${scheduleResult.schedule.year}</title>
+    <title>Work Schedule - ${month}/${year}</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -224,13 +229,13 @@ export function printHTMLScheduleTable(scheduleResult: ScheduleGenerationResult,
     </style>
 </head>
 <body>
-    <h1>Work Schedule - ${scheduleResult.schedule.month}/${scheduleResult.schedule.year}</h1>
+    <h1>Work Schedule - ${month}/${year}</h1>
     ${htmlTable}
 </body>
 </html>`;
 
   // Save HTML table to file
-  const fileName = `schedule-${scheduleResult.schedule.month}-${scheduleResult.schedule.year}.html`;
+  const fileName = `schedule-${month}-${year}.html`;
   const filePath = join(process.cwd(), fileName);
   writeFileSync(filePath, htmlDocument, 'utf8');
 
@@ -250,9 +255,17 @@ export function printHTMLFromShifts(shifts: Shift[], config: WorkSchedulerConfig
     shiftsByMonth.get(key)!.push(s);
   }
 
-  // For each month, aggregate per-day and prepare table HTML
+  // Generate sections for ALL months in the schedule range (from monthlyBreakdown)
+  // This ensures months without shifts are still displayed
   const monthlySections: { year: number; month: number; tableHtml: string; summaryHtml: string }[] = [];
-  for (const [, monthShifts] of shiftsByMonth) {
+  const sortedScheduleMonths = [...monthSchedule.monthlyBreakdown].sort((a, b) => a.year - b.year || a.month - b.month);
+  
+  for (const monthStats of sortedScheduleMonths) {
+    const month = monthStats.month;
+    const year = monthStats.year;
+    const monthKey = `${year}-${month}`;
+    const monthShifts = shiftsByMonth.get(monthKey) || [];
+    
     // Aggregate shifts by date within this month
     const perDay = new Map<string, { date: Date; daily: EmployeeShifts[]; night: EmployeeShifts[] }>();
     for (const shift of monthShifts) {
@@ -286,10 +299,6 @@ export function printHTMLFromShifts(shifts: Shift[], config: WorkSchedulerConfig
         } as ScheduleDay;
       });
 
-    const sampleDate = monthShifts[0]!.date;
-    // Use UTC methods to match how dates are stored
-    const month = sampleDate.getUTCMonth() + 1;
-    const year = sampleDate.getUTCFullYear();
     const monthlyPlan: MonthlySchedulePlan = {
       month,
       year,
@@ -304,37 +313,35 @@ export function printHTMLFromShifts(shifts: Shift[], config: WorkSchedulerConfig
 
     const tableHtml = generateHTMLScheduleTable(htmlResult, config);
     
-    // Find matching month stats from monthlyBreakdown
-    const monthStats = monthSchedule.monthlyBreakdown.find(
-      stats => stats.month === month && stats.year === year
-    );
-    
     // Generate summary HTML for this month using monthStats
-    const summaryHtml = monthStats ? `
+    const summaryHtml = `
       <div class="summary">
         <div class="summary-item"><span class="summary-label">Working days (Mon-Fri):</span> ${monthStats.workingDays}</div>
-        <div class="summary-item"><span class="summary-label">Holidays:</span> ${monthStats.holidays.length > 0 ? monthStats.holidays.map(h => h.toString()).join(', ') : 'None'}</div>
+        <div class="summary-item"><span class="summary-label">Holidays:</span> ${monthStats.holidays.length > 0 ? monthStats.holidays.map(h => h.toISOString().slice(0, 10)).join(', ') : 'None'}</div>
         <div class="summary-item"><span class="summary-label">Total working hours:</span> ${monthStats.totalWorkingHours} hours</div>
         <div class="summary-item"><span class="summary-label">Shifts number:</span> ${monthStats.shiftsNumber}</div>
-        <div class="summary-item"><span class="summary-label">First day of schedule:</span> ${monthStats.workingDaysList[0]?.toISOString() || 'N/A'}</div>
-        <div class="summary-item"><span class="summary-label">Last day of schedule:</span> ${monthStats.workingDaysList[monthStats.workingDaysList.length - 1]?.toISOString() || 'N/A'}</div>
-      </div>
-    ` : `
-      <div class="summary">
-        <div class="summary-item"><span class="summary-label">Warning:</span> Month statistics not found</div>
+        <div class="summary-item"><span class="summary-label">First day of schedule:</span> ${monthStats.workingDaysList[0]?.toISOString().slice(0, 10) || 'N/A'}</div>
+        <div class="summary-item"><span class="summary-label">Last day of schedule:</span> ${monthStats.workingDaysList[monthStats.workingDaysList.length - 1]?.toISOString().slice(0, 10) || 'N/A'}</div>
       </div>
     `;
     
-    monthlySections.push({ year: monthlyPlan.year, month: monthlyPlan.month, tableHtml, summaryHtml });
+    monthlySections.push({ year, month, tableHtml, summaryHtml });
   }
 
   // Sort sections chronologically
   monthlySections.sort((a, b) => a.year - b.year || a.month - b.month);
 
+  // Determine the actual schedule range from monthlyBreakdown (which includes all months in the schedule period)
+  const scheduleMonths = monthSchedule.monthlyBreakdown.sort((a, b) => a.year - b.year || a.month - b.month);
+  const scheduleFirst = scheduleMonths[0];
+  const scheduleLast = scheduleMonths[scheduleMonths.length - 1];
+  
   // Build a single HTML document containing all monthly tables
   const first = monthlySections[0];
   const last = monthlySections[monthlySections.length - 1];
-  const titleRange = first && last
+  const titleRange = scheduleFirst && scheduleLast
+    ? `${scheduleFirst.month}/${scheduleFirst.year} - ${scheduleLast.month}/${scheduleLast.year}`
+    : first && last
     ? `${first.month}/${first.year} - ${last.month}/${last.year}`
     : `${monthSchedule.month}/${monthSchedule.year}`;
 
@@ -438,7 +445,10 @@ export function printHTMLFromShifts(shifts: Shift[], config: WorkSchedulerConfig
   </body>
   </html>`;
 
-  const outName = first && last
+  // Use the actual schedule range from monthlyBreakdown for the file name
+  const outName = scheduleFirst && scheduleLast
+    ? `schedule-${scheduleFirst.month}-${scheduleFirst.year}_to_${scheduleLast.month}-${scheduleLast.year}.html`
+    : first && last
     ? `schedule-${first.month}-${first.year}_to_${last.month}-${last.year}.html`
     : `schedule-${monthSchedule.month}-${monthSchedule.year}.html`;
   const outPath = join(process.cwd(), outName);
