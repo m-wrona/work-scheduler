@@ -62,15 +62,15 @@ describe('nextShift', () => {
 
         schedule = {
             workingDaysList: [
-                new Date(2025, 9, 1),
-                new Date(2025, 9, 2),
-                new Date(2025, 9, 3),
-                new Date(2025, 9, 4),
-                new Date(2025, 9, 5),
-                new Date(2025, 9, 6),
-                new Date(2025, 9, 7),
+                new Date(Date.UTC(2025, 9, 1)),
+                new Date(Date.UTC(2025, 9, 2)),
+                new Date(Date.UTC(2025, 9, 3)),
+                new Date(Date.UTC(2025, 9, 4)),
+                new Date(Date.UTC(2025, 9, 5)),
+                new Date(Date.UTC(2025, 9, 6)),
+                new Date(Date.UTC(2025, 9, 7)),
             ],
-            month: 9,
+            month: 10,
             year: 2025,
             workingDays: 7,
             totalWorkingHours: 37.9,
@@ -78,19 +78,19 @@ describe('nextShift', () => {
             holidays: [],
             monthlyBreakdown: [
                 {
-                    month: 9,
+                    month: 10,
                     year: 2025,
                     workingDays: 7,
                     totalWorkingHours: 37.9,
                     shiftsNumber: 3,
                     workingDaysList: [
-                        new Date(2025, 9, 1),
-                        new Date(2025, 9, 2),
-                        new Date(2025, 9, 3),
-                        new Date(2025, 9, 4),
-                        new Date(2025, 9, 5),
-                        new Date(2025, 9, 6),
-                        new Date(2025, 9, 7),
+                        new Date(Date.UTC(2025, 9, 1)),
+                        new Date(Date.UTC(2025, 9, 2)),
+                        new Date(Date.UTC(2025, 9, 3)),
+                        new Date(Date.UTC(2025, 9, 4)),
+                        new Date(Date.UTC(2025, 9, 5)),
+                        new Date(Date.UTC(2025, 9, 6)),
+                        new Date(Date.UTC(2025, 9, 7)),
                     ],
                     holidays: [],
                 },
@@ -562,7 +562,6 @@ describe('nextShift', () => {
         it('should create day and night shift for 1st day', () => {
             const result = nextShift(config, schedule, 0, prevShifts, employees, rules, false, 1);
 
-            const dayIdx = 0;
             expect(result).toHaveLength(14);
 
             for(const shift of result!) {
