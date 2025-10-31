@@ -2,6 +2,7 @@ import type { WorkSchedulerConfig } from './types/config';
 import type { ScheduleGenerationResult, ScheduleDay, DayShift, EmployeeShifts, MonthlySchedulePlan } from './types/schedule';
 import type { Shift } from './scheduler/model';
 import type { MonthSchedule } from './scheduler/calendar';
+import { createMonthSchedule } from './scheduler/calendar';
 import { writeFileSync } from 'fs';
 import { join } from 'path';
 
@@ -216,7 +217,7 @@ export function printHTMLFromShifts(shifts: Shift[], config: WorkSchedulerConfig
   }
 
   // For each month, aggregate per-day and prepare table HTML
-  const monthlySections: { year: number; month: number; tableHtml: string }[] = [];
+  const monthlySections: { year: number; month: number; tableHtml: string; summaryHtml: string }[] = [];
   for (const [, monthShifts] of shiftsByMonth) {
     // Aggregate shifts by date within this month
     const perDay = new Map<string, { date: Date; daily: EmployeeShifts[]; night: EmployeeShifts[] }>();
@@ -246,9 +247,11 @@ export function printHTMLFromShifts(shifts: Shift[], config: WorkSchedulerConfig
       });
 
     const sampleDate = monthShifts[0]!.date;
+    const month = sampleDate.getMonth() + 1;
+    const year = sampleDate.getFullYear();
     const monthlyPlan: MonthlySchedulePlan = {
-      month: sampleDate.getMonth() + 1,
-      year: sampleDate.getFullYear(),
+      month,
+      year,
       days: daysForHtml,
     };
 
@@ -259,7 +262,40 @@ export function printHTMLFromShifts(shifts: Shift[], config: WorkSchedulerConfig
     };
 
     const tableHtml = generateHTMLScheduleTable(htmlResult, config);
-    monthlySections.push({ year: monthlyPlan.year, month: monthlyPlan.month, tableHtml });
+    
+    // Calculate month-specific summary
+    // Filter holidays that fall in this specific month (check if day number is valid for the month)
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const monthHolidays = config.schedule.holidays.filter(day => {
+      // Only include holidays that are valid day numbers for this month
+      if (day < 1 || day > daysInMonth) return false;
+      const holidayDate = new Date(Date.UTC(year, month - 1, day));
+      // Double-check the date is still in the correct month (handles edge cases)
+      return holidayDate.getMonth() + 1 === month && holidayDate.getFullYear() === year;
+    });
+    
+    const monthScheduleData = createMonthSchedule(
+      month,
+      year,
+      1, // monthsCount = 1 for single month
+      config.workingHours.defaultDailyHours,
+      config.shifts.defaultShiftLength,
+      monthHolidays,
+    );
+    
+    // Generate summary HTML for this month
+    const summaryHtml = `
+      <div class="summary">
+        <div class="summary-item"><span class="summary-label">Working days (Mon-Fri):</span> ${monthScheduleData.workingDays}</div>
+        <div class="summary-item"><span class="summary-label">Holidays:</span> ${monthScheduleData.holidays.map(h => h.toString()).join(', ')}</div>
+        <div class="summary-item"><span class="summary-label">Total working hours:</span> ${monthScheduleData.totalWorkingHours} hours</div>
+        <div class="summary-item"><span class="summary-label">Shifts number:</span> ${monthScheduleData.shiftsNumber}</div>
+        <div class="summary-item"><span class="summary-label">1st day of schedule:</span> ${monthScheduleData.workingDaysList[0]?.toISOString() || 'N/A'}</div>
+        <div class="summary-item"><span class="summary-label">Last day of schedule:</span> ${monthScheduleData.workingDaysList[monthScheduleData.workingDaysList.length - 1]?.toISOString() || 'N/A'}</div>
+      </div>
+    `;
+    
+    monthlySections.push({ year: monthlyPlan.year, month: monthlyPlan.month, tableHtml, summaryHtml });
   }
 
   // Sort sections chronologically
@@ -364,16 +400,9 @@ export function printHTMLFromShifts(shifts: Shift[], config: WorkSchedulerConfig
   </head>
   <body>
     <h1>Work Schedule - ${titleRange}</h1>
-    <div class="summary">
-      <div class="summary-item"><span class="summary-label">Working days (Mon-Fri):</span> ${monthSchedule.workingDays}</div>
-      <div class="summary-item"><span class="summary-label">Holidays:</span> ${monthSchedule.holidays.map(h => h.toString()).join(', ')}</div>
-      <div class="summary-item"><span class="summary-label">Total working hours:</span> ${monthSchedule.totalWorkingHours} hours</div>
-      <div class="summary-item"><span class="summary-label">Shifts number:</span> ${monthSchedule.shiftsNumber}</div>
-      <div class="summary-item"><span class="summary-label">1st day of schedule:</span> ${monthSchedule.workingDaysList[0]?.toISOString() || 'N/A'}</div>
-      <div class="summary-item"><span class="summary-label">Last day of schedule:</span> ${monthSchedule.workingDaysList[monthSchedule.workingDaysList.length - 1]?.toISOString() || 'N/A'}</div>
-    </div>
     ${monthlySections.map(s => `
       <h2>${s.month}/${s.year}</h2>
+      ${s.summaryHtml}
       ${s.tableHtml}
     `).join('\n')}
   </body>
