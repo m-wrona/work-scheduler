@@ -6,7 +6,7 @@ import type { MonthSchedule } from './scheduler/calendar';
 import { writeFileSync } from 'fs';
 import { join } from 'path';
 
-export function generateHTMLScheduleTable(scheduleResult: ScheduleGenerationResult, config: WorkSchedulerConfig): string {
+export function generateHTMLScheduleTable(scheduleResult: ScheduleGenerationResult, config: WorkSchedulerConfig, totalWorkingHours?: number): string {
   const { schedule } = scheduleResult;
   const month = schedule.month;
   const year = schedule.year;
@@ -53,7 +53,12 @@ export function generateHTMLScheduleTable(scheduleResult: ScheduleGenerationResu
   };
   
   // Create header row with day classes
-  const headerRow: (string | { value: string; classes: string })[] = ['Name', ...dayNumbers.map(d => ({ value: d.toString(), classes: getDayClasses(d) })), 'Total Hours'];
+  const headerRow: (string | { value: string; classes: string })[] = [
+    'Name', 
+    ...dayNumbers.map(d => ({ value: d.toString(), classes: getDayClasses(d) })), 
+    'Total Hours',
+    'Remaining hours'
+  ];
   
   // Create employee schedule data
   const employeeSchedules = config.employees.map((emp, index) => {
@@ -96,9 +101,23 @@ export function generateHTMLScheduleTable(scheduleResult: ScheduleGenerationResu
     });
     
     // Calculate total hours (shift count * shift length)
-    const totalHours = (shiftCount * config.shifts.defaultShiftLength).toFixed(2);
+    const totalHours = shiftCount * config.shifts.defaultShiftLength;
+    const totalHoursStr = totalHours.toFixed(2);
     
-    return [employeeName, ...dayShifts, totalHours];
+    // Calculate remaining hours (hours worked - total working hours available)
+    let remainingHoursStr = '';
+    if (totalWorkingHours !== undefined) {
+      const remainingHours = totalHours - totalWorkingHours;
+      if (remainingHours > 0) {
+        remainingHoursStr = `+${remainingHours.toFixed(1)}h`;
+      } else if (remainingHours < 0) {
+        remainingHoursStr = `${remainingHours.toFixed(1)}h`;
+      } else {
+        remainingHoursStr = '0h';
+      }
+    }
+    
+    return [employeeName, ...dayShifts, totalHoursStr, remainingHoursStr];
   });
   
   // Generate HTML table
@@ -110,8 +129,14 @@ export function generateHTMLScheduleTable(scheduleResult: ScheduleGenerationResu
     if (index === 0) {
       html += `      <th>${cell}</th>\n`;
     } else if (typeof cell === 'string') {
-      // Last column (Total Hours)
-      html += `      <th class="total-hours-header">${cell}</th>\n`;
+      // Last two columns (Total Hours and Remaining hours)
+      if (cell === 'Total Hours') {
+        html += `      <th class="total-hours-header">${cell}</th>\n`;
+      } else if (cell === 'Remaining hours') {
+        html += `      <th class="remaining-hours-header">${cell}</th>\n`;
+      } else {
+        html += `      <th>${cell}</th>\n`;
+      }
     } else {
       const cellData = cell as { value: string; classes: string };
       const classAttr = cellData.classes ? ` class="${cellData.classes}"` : '';
@@ -123,6 +148,7 @@ export function generateHTMLScheduleTable(scheduleResult: ScheduleGenerationResu
   // Data rows
   html += '  <tbody>\n';
   const totalHoursColumnIndex = daysInMonth + 1; // Name column + all day columns
+  const remainingHoursColumnIndex = daysInMonth + 2; // Name column + all day columns + Total Hours
   employeeSchedules.forEach(row => {
     html += '    <tr>\n';
     row.forEach((cell, index) => {
@@ -130,8 +156,11 @@ export function generateHTMLScheduleTable(scheduleResult: ScheduleGenerationResu
       if (index === 0) {
         classAttr = 'class="employee-name"';
       } else if (index === totalHoursColumnIndex) {
-        // Last column (Total Hours)
+        // Total Hours column
         classAttr = 'class="total-hours"';
+      } else if (index === remainingHoursColumnIndex) {
+        // Remaining hours column
+        classAttr = 'class="remaining-hours"';
       } else {
         // Apply day classes to data cells (index is the day number since column 0 is employee name)
         const dayNumber = index;
@@ -205,11 +234,24 @@ export function printHTMLScheduleTable(scheduleResult: ScheduleGenerationResult,
             font-weight: bold;
             color: #2c3e50;
         }
+        .remaining-hours-header {
+            background-color: #9b59b6;
+            color: white;
+            font-weight: bold;
+        }
+        .remaining-hours {
+            background-color: #f4ecf7;
+            font-weight: bold;
+            color: #5b2c6f;
+        }
         tr:nth-child(even) {
             background-color: #f9f9f9;
         }
         tr:nth-child(even) .total-hours {
             background-color: #d4e9f0;
+        }
+        tr:nth-child(even) .remaining-hours {
+            background-color: #e8dae8;
         }
         tr:hover {
             background-color: #f0f8ff;
@@ -311,7 +353,7 @@ export function printHTMLFromShifts(shifts: Shift[], config: WorkSchedulerConfig
       errors: [],
     };
 
-    const tableHtml = generateHTMLScheduleTable(htmlResult, config);
+    const tableHtml = generateHTMLScheduleTable(htmlResult, config, monthStats.totalWorkingHours);
     
     // Generate summary HTML for this month using monthStats
     const summaryHtml = `
@@ -396,11 +438,24 @@ export function printHTMLFromShifts(shifts: Shift[], config: WorkSchedulerConfig
             font-weight: bold;
             color: #2c3e50;
         }
+        .remaining-hours-header {
+            background-color: #9b59b6;
+            color: white;
+            font-weight: bold;
+        }
+        .remaining-hours {
+            background-color: #f4ecf7;
+            font-weight: bold;
+            color: #5b2c6f;
+        }
         tr:nth-child(even) {
             background-color: #f9f9f9;
         }
         tr:nth-child(even) .total-hours {
             background-color: #d4e9f0;
+        }
+        tr:nth-child(even) .remaining-hours {
+            background-color: #e8dae8;
         }
         tr:hover {
             background-color: #f0f8ff;
