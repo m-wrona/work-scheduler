@@ -125,7 +125,7 @@ export function sortEmployeeShifts(employeeShifts: Map<string, EmployeeShift>, n
         remaining = remaining.filter(e => e.lastDate !== null);
     }
 
-    order.push(...remaining.sort(lastDateShiftComparator));
+    order.push(...remaining.sort(workingHoursComparator));
 
     return order;
 }
@@ -142,11 +142,11 @@ export function isAvailable(employeeShift: EmployeeShift, date: Date, night: boo
     return employeeShift.nextNotSoonerThan === null || date >= employeeShift.nextNotSoonerThan;
 }
 
-export function lastDateShiftComparator(a: EmployeeShift, b: EmployeeShift): number {
-    if (a.lastDate !== null && b.lastDate !== null) {
-        return a.lastDate.getTime() - b.lastDate.getTime();
+export function workingHoursComparator(a: EmployeeShift, b: EmployeeShift): number {
+    if (a.hours !== null && b.hours !== null) {
+        return a.hours - b.hours;
     }
-    if (a.lastDate !== null && b.lastDate === null) {
+    if (a.hours !== null && b.hours === null) {
         return -1;
     }
     return 1;
