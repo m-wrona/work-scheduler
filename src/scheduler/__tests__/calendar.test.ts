@@ -8,23 +8,24 @@ import {
 describe('createMonthSchedule', () => {
   describe('basic functionality', () => {
     it('should return correct structure for January 2024', () => {
-      const result = createMonthSchedule(1, 2024);
+      const result = createMonthSchedule(1, 2024, 1); // Single month
       
       expect(result).toHaveProperty('month', 1);
       expect(result).toHaveProperty('year', 2024);
-      expect(result).toHaveProperty('totalDays');
       expect(result).toHaveProperty('workingDays');
       expect(result).toHaveProperty('totalWorkingHours', 184);
       expect(result).toHaveProperty('shiftsNumber', 15);
       expect(result).toHaveProperty('workingDaysList');
+      expect(result).toHaveProperty('monthlyBreakdown');
       expect(Array.isArray(result.workingDaysList)).toBe(true);
+      expect(Array.isArray(result.monthlyBreakdown)).toBe(true);
+      expect(result.monthlyBreakdown).toHaveLength(1);
     });
 
     it('should calculate correct working days for January 2024', () => {
-      const result = createMonthSchedule(1, 2024);
+      const result = createMonthSchedule(1, 2024, 1); // Single month
       
       // January 2024 has 31 days, starts on Monday
-      expect(result.totalDays).toBe(31);
       expect(result.workingDays).toBe(23); // 5 weeks * 5 days + 3 extra working days
       expect(result.workingDaysList).toHaveLength(23);
       expect(result.holidays).toHaveLength(0);
@@ -32,10 +33,9 @@ describe('createMonthSchedule', () => {
 
     it('should calculate correct working days for January 2024 with holidays', () => {
       const holidays = ['1.1', '2.1'];
-      const result = createMonthSchedule(1, 2024, 8, 12, holidays);
+      const result = createMonthSchedule(1, 2024, 1, 8, 12, holidays);
       
       // January 2024 has 31 days, starts on Monday
-      expect(result.totalDays).toBe(31);
       expect(result.workingDays).toBe(21); // 5 weeks * 5 days + 3 extra working days
       expect(result.workingDaysList).toHaveLength(21);
       expect(result.holidays).toHaveLength(2);
@@ -43,19 +43,17 @@ describe('createMonthSchedule', () => {
 
 
     it('should calculate correct working days for February 2024 (leap year)', () => {
-      const result = createMonthSchedule(2, 2024);
+      const result = createMonthSchedule(2, 2024, 1); // Single month
       
       // February 2024 has 29 days (leap year)
-      expect(result.totalDays).toBe(29);
       expect(result.workingDays).toBe(21); // 4 weeks * 5 days + 1 extra working day
       expect(result.workingDaysList).toHaveLength(21);
     });
 
     it('should calculate correct working days for February 2023 (non-leap year)', () => {
-      const result = createMonthSchedule(2, 2023);
+      const result = createMonthSchedule(2, 2023, 1); // Single month
       
       // February 2023 has 28 days
-      expect(result.totalDays).toBe(28);
       expect(result.workingDays).toBe(20); // 4 weeks * 5 days
       expect(result.workingDaysList).toHaveLength(20);
     });
@@ -64,10 +62,10 @@ describe('createMonthSchedule', () => {
 
   describe('working days filtering', () => {
     it('should only include Monday-Friday in working days list', () => {
-      const result = createMonthSchedule(1, 2024);
+      const result = createMonthSchedule(1, 2024, 1); // Single month
       
       result.workingDaysList.forEach(date => {
-        const dayOfWeek = date.getDay();
+        const dayOfWeek = date.getUTCDay(); // Use UTC to match date storage
         expect(dayOfWeek).toBeGreaterThanOrEqual(1); // Monday = 1
         expect(dayOfWeek).toBeLessThanOrEqual(5); // Friday = 5
       });
@@ -75,11 +73,12 @@ describe('createMonthSchedule', () => {
 
     it('should exclude weekends from working days count', () => {
       // Test a month that starts on Saturday and ends on Sunday
-      const result = createMonthSchedule(6, 2024); // June 2024 starts on Saturday
+      const result = createMonthSchedule(6, 2024, 1); // June 2024 starts on Saturday, single month
       
       // Count actual working days manually
       let expectedWorkingDays = 0;
-      for (let day = 1; day <= result.totalDays; day++) {
+      const daysInMonth = new Date(2024, 6, 0).getDate(); // June has 30 days
+      for (let day = 1; day <= daysInMonth; day++) {
         const date = new Date(2024, 5, day); // month is 0-indexed
         const dayOfWeek = date.getDay();
         if (dayOfWeek >= 1 && dayOfWeek <= 5) {
@@ -91,22 +90,21 @@ describe('createMonthSchedule', () => {
     });
 
     it('should create correct Date objects in working days list', () => {
-      const result = createMonthSchedule(3, 2024); // March 2024
+      const result = createMonthSchedule(3, 2024, 1); // March 2024, single month
       
       result.workingDaysList.forEach((date, index) => {
-        expect(date.getFullYear()).toBe(2024);
-        expect(date.getMonth()).toBe(2); // March is 2 (0-indexed)
-        expect(date.getDate()).toBeGreaterThanOrEqual(1);
-        expect(date.getDate()).toBeLessThanOrEqual(31);
+        expect(date.getUTCFullYear()).toBe(2024);
+        expect(date.getUTCMonth()).toBe(2); // March is 2 (0-indexed)
+        expect(date.getUTCDate()).toBeGreaterThanOrEqual(1);
+        expect(date.getUTCDate()).toBeLessThanOrEqual(31);
       });
     });
   });
 
   describe('edge cases', () => {
     it('should handle December correctly', () => {
-      const result = createMonthSchedule(12, 2024);
+      const result = createMonthSchedule(12, 2024, 1); // Single month
       
-      expect(result.totalDays).toBe(31);
       expect(result.workingDays).toBe(22); // December 2024 has 22 working days
       expect(result.workingDaysList).toHaveLength(22);
     });
@@ -120,7 +118,7 @@ describe('createMonthSchedule', () => {
       ];
 
       testCases.forEach(({ month, year, expectedWorkingDays }) => {
-        const result = createMonthSchedule(month, year);
+        const result = createMonthSchedule(month, year, 1); // Single month
         expect(result.workingDays).toBe(expectedWorkingDays);
       });
     });
@@ -143,15 +141,26 @@ describe('createMonthSchedule', () => {
       // Check all required properties exist
       expect(typeof result.month).toBe('number');
       expect(typeof result.year).toBe('number');
-      expect(typeof result.totalDays).toBe('number');
       expect(typeof result.workingDays).toBe('number');
       expect(typeof result.totalWorkingHours).toBe('number');
       expect(typeof result.shiftsNumber).toBe('number');
       expect(Array.isArray(result.workingDaysList)).toBe(true);
+      expect(Array.isArray(result.monthlyBreakdown)).toBe(true);
       
       // Check that workingDaysList contains Date objects
       result.workingDaysList.forEach(date => {
         expect(date instanceof Date).toBe(true);
+      });
+      
+      // Check monthlyBreakdown structure
+      result.monthlyBreakdown.forEach(monthStats => {
+        expect(typeof monthStats.month).toBe('number');
+        expect(typeof monthStats.year).toBe('number');
+        expect(typeof monthStats.workingDays).toBe('number');
+        expect(typeof monthStats.totalWorkingHours).toBe('number');
+        expect(typeof monthStats.shiftsNumber).toBe('number');
+        expect(Array.isArray(monthStats.workingDaysList)).toBe(true);
+        expect(Array.isArray(monthStats.holidays)).toBe(true);
       });
     });
     
@@ -281,10 +290,13 @@ describe('getAllDaysInMonth', () => {
   describe('comparison with getWorkingDaysInMonth', () => {
     it('should return more days than working days', () => {
       const allDays = getAllDaysInMonth(1, 2024);
-      const workingDays = createMonthSchedule(1, 2024);
+      const workingDays = createMonthSchedule(1, 2024, 1); // Single month
       
       expect(allDays.length).toBeGreaterThan(workingDays.workingDays);
-      expect(allDays.length).toBe(workingDays.totalDays);
+      // Verify that the monthly breakdown has correct structure
+      expect(workingDays.monthlyBreakdown.length).toBeGreaterThan(0);
+      const totalFromBreakdown = workingDays.monthlyBreakdown.reduce((sum, m) => sum + m.workingDays, 0);
+      expect(totalFromBreakdown).toBe(workingDays.workingDays);
     });
 
     it('should include weekends in all days', () => {

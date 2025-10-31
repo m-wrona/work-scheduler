@@ -4,6 +4,16 @@
 
 import { parseHolidayDate } from '../types/config';
 
+export interface MonthStats {
+  month: number;
+  year: number;
+  workingDays: number;
+  totalWorkingHours: number;
+  shiftsNumber: number;
+  workingDaysList: Date[];
+  holidays: Date[];
+}
+
 export interface MonthSchedule {
   month: number;
   year: number;
@@ -12,6 +22,7 @@ export interface MonthSchedule {
   shiftsNumber: number;
   workingDaysList: Date[];
   holidays: Date[];
+  monthlyBreakdown: MonthStats[];
 }
 
 export function createMonthSchedule(
@@ -48,6 +59,9 @@ export function createMonthSchedule(
   const workingDays: Date[] = [];
   let workingDaysCount = 0;
 
+  // Track per-month statistics
+  const monthlyStats = new Map<string, MonthStats>();
+  
   for (
     let currentDate = new Date(startDay);
     currentDate.getTime() < endDay.getTime();
@@ -57,13 +71,52 @@ export function createMonthSchedule(
     const dayOfWeek = currentDate.getUTCDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
     const isHoliday = holidayDateStrings.has(currentDateString);
     
+    // Get month/year key for per-month tracking
+    const currentMonth = currentDate.getUTCMonth() + 1;
+    const currentYear = currentDate.getUTCFullYear();
+    const monthKey = `${currentYear}-${currentMonth}`;
+    
+    // Initialize month stats if not exists
+    if (!monthlyStats.has(monthKey)) {
+      monthlyStats.set(monthKey, {
+        month: currentMonth,
+        year: currentYear,
+        workingDays: 0,
+        totalWorkingHours: 0,
+        shiftsNumber: 0,
+        workingDaysList: [],
+        holidays: [],
+      });
+    }
+    const monthStats = monthlyStats.get(monthKey)!;
+    
     if (!isHoliday && dayOfWeek >= 1 && dayOfWeek <= 5) {
       workingDaysCount++;
+      monthStats.workingDays++;
+      const workingDayDate = new Date(currentDate);
+      workingDays.push(workingDayDate);
+      monthStats.workingDaysList.push(workingDayDate);
     }
-    workingDays.push(new Date(currentDate));
+    
+    // Track holidays per month
+    if (isHoliday) {
+      const holidayDate = holidayDates.find(h => h.toISOString().slice(0, 10) === currentDateString);
+      if (holidayDate && !monthStats.holidays.some(h => h.getTime() === holidayDate.getTime())) {
+        monthStats.holidays.push(holidayDate);
+      }
+    }
   }
 
-  const totalWorkingHours = workingDaysCount * dailyHours
+  const totalWorkingHours = workingDaysCount * dailyHours;
+  
+  // Calculate per-month hours and shifts
+  const monthlyBreakdown: MonthStats[] = Array.from(monthlyStats.values())
+    .sort((a, b) => a.year - b.year || a.month - b.month)
+    .map(stats => ({
+      ...stats,
+      totalWorkingHours: stats.workingDays * dailyHours,
+      shiftsNumber: Math.floor(stats.workingDays * dailyHours / shiftLength),
+    }));
 
   return {
     month,
@@ -73,6 +126,7 @@ export function createMonthSchedule(
     shiftsNumber: Math.floor(totalWorkingHours / shiftLength),
     workingDaysList: workingDays,
     holidays: holidayDates,
+    monthlyBreakdown,
   };
 }
 

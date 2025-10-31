@@ -49,8 +49,20 @@ console.log(`Holidays: ${monthSchedule.holidays}`);
 console.log(`Total working hours: ${monthSchedule.totalWorkingHours} hours`);
 console.log(`Shifts number: ${monthSchedule.shiftsNumber}`);
 
-console.log('1st day of  schedule:', monthSchedule.workingDaysList[0]);
+console.log('First day of  schedule:', monthSchedule.workingDaysList[0]);
 console.log('Last day of  schedule:', monthSchedule.workingDaysList[monthSchedule.workingDaysList.length - 1]);
+
+console.log('\nMonthly Breakdown:');
+console.log('==================');
+monthSchedule.monthlyBreakdown.forEach((monthStats, index) => {
+  console.log(`\nMonth ${index + 1}: ${monthStats.month}/${monthStats.year}`);
+  console.log(`  Working days (Mon-Fri): ${monthStats.workingDays}`);
+  console.log(`  Holidays: ${monthStats.holidays.length > 0 ? monthStats.holidays.map(h => h.toISOString().slice(0, 10)).join(', ') : 'None'}`);
+  console.log(`  Total working hours: ${monthStats.totalWorkingHours} hours`);
+  console.log(`  Shifts number: ${monthStats.shiftsNumber}`);
+  console.log(`  First day: ${monthStats.workingDaysList[0]?.toISOString().slice(0, 10) || 'N/A'}`);
+  console.log(`  Last day: ${monthStats.workingDaysList[monthStats.workingDaysList.length - 1]?.toISOString().slice(0, 10) || 'N/A'}`);
+});
 
 const shifts = nextShift(
   typedConfig, 
