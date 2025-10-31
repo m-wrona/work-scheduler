@@ -72,11 +72,29 @@ describe('nextShift', () => {
             ],
             month: 9,
             year: 2025,
-            totalDays: 30,
             workingDays: 7,
             totalWorkingHours: 37.9,
             shiftsNumber: 3,
             holidays: [],
+            monthlyBreakdown: [
+                {
+                    month: 9,
+                    year: 2025,
+                    workingDays: 7,
+                    totalWorkingHours: 37.9,
+                    shiftsNumber: 3,
+                    workingDaysList: [
+                        new Date(2025, 9, 1),
+                        new Date(2025, 9, 2),
+                        new Date(2025, 9, 3),
+                        new Date(2025, 9, 4),
+                        new Date(2025, 9, 5),
+                        new Date(2025, 9, 6),
+                        new Date(2025, 9, 7),
+                    ],
+                    holidays: [],
+                },
+            ],
         };
 
         employees = new Map();
@@ -132,6 +150,7 @@ describe('nextShift', () => {
                             hours: 7.58,
                             lastShiftNight: false,
                             shiftPattern: [],
+                            hoursPerMonth: new Map(),
                         },
                         {
                             employee: employees.get('2')!.employee,
@@ -141,6 +160,7 @@ describe('nextShift', () => {
                             hours: 7.58,
                             lastShiftNight: false,
                             shiftPattern: [],
+                            hoursPerMonth: new Map(),
                         },
                         {
                             employee: employees.get('3')!.employee,
@@ -150,6 +170,7 @@ describe('nextShift', () => {
                             hours: 7.58,
                             lastShiftNight: false,
                             shiftPattern: [],
+                            hoursPerMonth: new Map(),
                         },
                         {
                             employee: employees.get('4')!.employee,
@@ -159,6 +180,7 @@ describe('nextShift', () => {
                             hours: 7.58,
                             lastShiftNight: false,
                             shiftPattern: [],
+                            hoursPerMonth: new Map(),
                         },
                     ],
                     night: false,
@@ -197,6 +219,7 @@ describe('nextShift', () => {
                             hours: 7.58,
                             lastShiftNight: false,
                             shiftPattern: [],
+                            hoursPerMonth: new Map(),
                         },
                         {
                             employee: employees.get('2')!.employee,
@@ -206,6 +229,7 @@ describe('nextShift', () => {
                             hours: 7.58,
                             lastShiftNight: false,
                             shiftPattern: [],
+                            hoursPerMonth: new Map(),
                         },
                         {
                             employee: employees.get('3')!.employee,
@@ -215,6 +239,7 @@ describe('nextShift', () => {
                             hours: 7.58,
                             lastShiftNight: false,
                             shiftPattern: [],
+                            hoursPerMonth: new Map(),
                         },
                         {
                             employee: employees.get('4')!.employee,
@@ -224,6 +249,7 @@ describe('nextShift', () => {
                             hours: 7.58,
                             lastShiftNight: false,
                             shiftPattern: [],
+                            hoursPerMonth: new Map(),
                         },
                     ],
                     night: false,
@@ -263,6 +289,7 @@ describe('nextShift', () => {
                             hours: 7.58,
                             lastShiftNight: false,
                             shiftPattern: [],
+                            hoursPerMonth: new Map(),
                         },
                         {
                             employee: employees.get('2')!.employee,
@@ -272,6 +299,7 @@ describe('nextShift', () => {
                             hours: 7.58,
                             lastShiftNight: false,
                             shiftPattern: [],
+                            hoursPerMonth: new Map(),
                         },
                         {
                             employee: employees.get('3')!.employee,
@@ -281,6 +309,7 @@ describe('nextShift', () => {
                             hours: 7.58,
                             lastShiftNight: false,
                             shiftPattern: [],
+                            hoursPerMonth: new Map(),
                         },
                         {
                             employee: employees.get('4')!.employee,
@@ -290,6 +319,7 @@ describe('nextShift', () => {
                             hours: 7.58,
                             lastShiftNight: false,
                             shiftPattern: [],
+                            hoursPerMonth: new Map(),
                         },
                     ],
                     night: false,
@@ -329,6 +359,7 @@ describe('nextShift', () => {
                             hours: 7.58,
                             lastShiftNight: false,
                             shiftPattern: [],
+                            hoursPerMonth: new Map(),
                         },
                         {
                             employee: employees.get('2')!.employee,
@@ -338,6 +369,7 @@ describe('nextShift', () => {
                             hours: 7.58,
                             lastShiftNight: false,
                             shiftPattern: [],
+                            hoursPerMonth: new Map(),
                         },
                         {
                             employee: employees.get('3')!.employee,
@@ -347,6 +379,7 @@ describe('nextShift', () => {
                             hours: 7.58,
                             lastShiftNight: false,
                             shiftPattern: [],
+                            hoursPerMonth: new Map(),
                         },
                         {
                             employee: employees.get('4')!.employee,
@@ -356,6 +389,7 @@ describe('nextShift', () => {
                             hours: 7.58,
                             lastShiftNight: false,
                             shiftPattern: [],
+                            hoursPerMonth: new Map(),
                         },
                     ],
                     night: false,
@@ -395,6 +429,7 @@ describe('nextShift', () => {
                             hours: 7.58,
                             lastShiftNight: false,
                             shiftPattern: [],
+                            hoursPerMonth: new Map(),
                         },
                         {
                             employee: employees.get('2')!.employee,
@@ -404,6 +439,7 @@ describe('nextShift', () => {
                             hours: 7.58,
                             lastShiftNight: false,
                             shiftPattern: [],
+                            hoursPerMonth: new Map(),
                         },
                         {
                             employee: employees.get('3')!.employee,
@@ -413,6 +449,7 @@ describe('nextShift', () => {
                             hours: 7.58,
                             lastShiftNight: false,
                             shiftPattern: [],
+                            hoursPerMonth: new Map(),
                         },
                         {
                             employee: employees.get('4')!.employee,
@@ -422,6 +459,7 @@ describe('nextShift', () => {
                             hours: 7.58,
                             lastShiftNight: false,
                             shiftPattern: [],
+                            hoursPerMonth: new Map(),
                         },
                     ],
                     night: false,
@@ -522,7 +560,7 @@ describe('nextShift', () => {
 
 
         it('should create day and night shift for 1st day', () => {
-            const result = nextShift(config, schedule, 0, prevShifts, employees, rules, false, 5);
+            const result = nextShift(config, schedule, 0, prevShifts, employees, rules, false, 1);
 
             const dayIdx = 0;
             expect(result).toHaveLength(14);

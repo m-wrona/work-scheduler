@@ -22,9 +22,10 @@ export function workingHoursWithinLimits(
     day: Date,
     night: boolean,
 ): boolean {
-    const monthIndex = day.getMonth() + 1;
+    const monthIndex = day.getUTCMonth() + 1; // Convert from 0-11 to 1-12
     const year = day.getUTCFullYear();
-    const hoursPerMonth = employeeShift.hoursPerMonth.get(day.getMonth()) || 0;
+    const monthKey = day.getUTCMonth(); // 0-11 for hoursPerMonth map key
+    const hoursPerMonth = employeeShift.hoursPerMonth.get(monthKey) || 0;
     const monthStats = schedule.monthlyBreakdown.find(m => m.month === monthIndex && m.year === year);
 
     return hoursPerMonth <= monthStats!.totalWorkingHours &&

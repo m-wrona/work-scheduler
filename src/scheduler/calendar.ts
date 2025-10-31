@@ -36,8 +36,8 @@ export function createMonthSchedule(
   // Parse holiday date strings to Date objects, filtering by the date range
   const startDay = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0));
   const endDay = new Date(Date.UTC(year, month + monthsCount - 1, 1, 0, 0, 0, 0));
-  
   const holidayDates: Date[] = [];
+  
   for (const holidayStr of holidays) {
     // Try parsing with the config year, but also check if it might be next year (for year-end holidays)
     const holidayDate = parseHolidayDate(holidayStr, year);
@@ -50,7 +50,7 @@ export function createMonthSchedule(
       holidayDates.push(nextYearHoliday);
     }
   }
-  
+
   // Create a Set for efficient holiday lookup by date string (YYYY-MM-DD)
   const holidayDateStrings = new Set(
     holidayDates.map(h => h.toISOString().slice(0, 10))
@@ -61,7 +61,7 @@ export function createMonthSchedule(
 
   // Track per-month statistics
   const monthlyStats = new Map<string, MonthStats>();
-  
+
   for (
     let currentDate = new Date(startDay);
     currentDate.getTime() < endDay.getTime();
@@ -70,12 +70,12 @@ export function createMonthSchedule(
     const currentDateString = currentDate.toISOString().slice(0, 10);
     const dayOfWeek = currentDate.getUTCDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
     const isHoliday = holidayDateStrings.has(currentDateString);
-    
+
     // Get month/year key for per-month tracking
     const currentMonth = currentDate.getUTCMonth() + 1;
     const currentYear = currentDate.getUTCFullYear();
     const monthKey = `${currentYear}-${currentMonth}`;
-    
+
     // Initialize month stats if not exists
     if (!monthlyStats.has(monthKey)) {
       monthlyStats.set(monthKey, {
@@ -89,15 +89,12 @@ export function createMonthSchedule(
       });
     }
     const monthStats = monthlyStats.get(monthKey)!;
-    
+
     if (!isHoliday && dayOfWeek >= 1 && dayOfWeek <= 5) {
       workingDaysCount++;
       monthStats.workingDays++;
-      const workingDayDate = new Date(currentDate);
-      workingDays.push(workingDayDate);
-      monthStats.workingDaysList.push(workingDayDate);
     }
-    
+
     // Track holidays per month
     if (isHoliday) {
       const holidayDate = holidayDates.find(h => h.toISOString().slice(0, 10) === currentDateString);
@@ -105,10 +102,14 @@ export function createMonthSchedule(
         monthStats.holidays.push(holidayDate);
       }
     }
+
+    const workingDayDate = new Date(currentDate);
+    workingDays.push(workingDayDate);
+    monthStats.workingDaysList.push(workingDayDate);
   }
 
   const totalWorkingHours = workingDaysCount * dailyHours;
-  
+
   // Calculate per-month hours and shifts
   const monthlyBreakdown: MonthStats[] = Array.from(monthlyStats.values())
     .sort((a, b) => a.year - b.year || a.month - b.month)
