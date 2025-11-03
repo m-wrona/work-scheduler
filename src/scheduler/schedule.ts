@@ -14,7 +14,8 @@ export function nextShift(
     employeeShifts: Map<string, EmployeeShift>,
     rules: Rule[] = Rules,
     night: boolean = false,
-    maxTries: number = 20,
+    maxTries: number = 1,
+    shuffle: boolean = true,
 ): Shift[] | null {
     if (dayIdx >= schedule.workingDaysList.length) {
         return prevShifts;
@@ -29,8 +30,8 @@ export function nextShift(
             ])
     );
 
-    let employeeOrder = sortEmployeeShifts(employeeShifts, night);
     planning: for (let i = 0; i < maxTries; i++) {
+        let employeeOrder = sortEmployeeShifts(employeeShifts, night, shuffle);
         const shiftEmployees = createShift(
             date,
             employeeOrder,
@@ -42,7 +43,7 @@ export function nextShift(
 
         if (shiftEmployees == null) {
             // not able to plan a shift for given state 
-            employeeOrder = shuffleArray(employeeOrder);
+            // employeeOrder = shuffleArray(employeeOrder);
             continue planning;
         }
 
@@ -56,7 +57,7 @@ export function nextShift(
             night: night,
         };
 
-        return nextShift(
+        const nextEmployeeShift = nextShift(
             cfg,
             schedule,
             night ? dayIdx + 1 : dayIdx,
@@ -66,9 +67,13 @@ export function nextShift(
             !night,
             maxTries,
         );
+
+        if (nextEmployeeShift !== null) {
+            return nextEmployeeShift;
+        }
     }
 
-    return prevShifts;
+    return null;
 }
 
 export function createShift(
@@ -113,18 +118,25 @@ export function createShift(
         }
 
     }
+
     return null;
 }
 
-export function sortEmployeeShifts(employeeShifts: Map<string, EmployeeShift>, night: boolean): EmployeeShift[] {
+export function sortEmployeeShifts(employeeShifts: Map<string, EmployeeShift>, night: boolean, shuffle: boolean = false): EmployeeShift[] {
     let remaining = [...employeeShifts.values()];
-    const order: EmployeeShift[] = [];
+    let order: EmployeeShift[] = [];
 
-    if (!night) {
+    if (night) {
+        order.push(...remaining.filter(e => e.lastDate !== null));
+        remaining = remaining.filter(e => e.lastDate === null);
+    } else {
         order.push(...remaining.filter(e => e.lastDate === null));
         remaining = remaining.filter(e => e.lastDate !== null);
     }
 
+    if (shuffle) {
+        order = shuffleArray(order);
+    }
     order.push(...remaining.sort(workingHoursComparator));
 
     return order;
@@ -134,12 +146,27 @@ export function isAvailable(employeeShift: EmployeeShift, date: Date, night: boo
     if (night && employeeShift.lastDate !== null && !employeeShift.lastShiftNight) {
         const nextDay = new Date(employeeShift.lastDate);
         nextDay.setDate(nextDay.getDate() + 1);
-        if (date.getTime() === nextDay.getTime()) {
+
+        const normalizedDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        const normalizedNextDay = new Date(nextDay.getFullYear(), nextDay.getMonth(), nextDay.getDate());
+
+        if (normalizedDate.getTime() === normalizedNextDay.getTime()) {
             return true;
         }
     }
 
-    return employeeShift.nextNotSoonerThan === null || date >= employeeShift.nextNotSoonerThan;
+    if (employeeShift.nextNotSoonerThan !== null) {
+        const normalizedDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        const normalizedNotSoonerThan = new Date(
+            date.getFullYear(),
+            employeeShift.nextNotSoonerThan.getMonth(),
+            employeeShift.nextNotSoonerThan.getDate()
+        );
+
+        return normalizedDate >= normalizedNotSoonerThan;
+    }
+
+    return true;
 }
 
 export function workingHoursComparator(a: EmployeeShift, b: EmployeeShift): number {
