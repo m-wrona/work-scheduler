@@ -83,7 +83,6 @@ describe('sortEmployeeShifts', () => {
         it('sort by last date first then by no shift', () => {
             const shift1 = newEmployeeShift(employee1);
             shift1.lastDate = new Date(2025, 0, 5);
-            shift1.lastShiftNight = false;
             shift1.nextNotSoonerThan = new Date(2025, 0, 7);
             shift1.nextNotLaterThan = new Date(2025, 0, 10);
             
@@ -94,7 +93,6 @@ describe('sortEmployeeShifts', () => {
             
             const shift3 = newEmployeeShift(employee3);
             shift3.lastDate = new Date(2025, 0, 4);
-            shift3.lastShiftNight = false;
             shift3.nextNotSoonerThan = new Date(2025, 0, 6);
             shift3.nextNotLaterThan = new Date(2025, 0, 10);
 

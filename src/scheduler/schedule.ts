@@ -136,6 +136,8 @@ export function sortEmployeeShifts(employeeShifts: Map<string, EmployeeShift>, n
 
     if (shuffle) {
         order = shuffleArray(order);
+    } else {
+        order = order.sort(workingHoursComparator);
     }
     order.push(...remaining.sort(workingHoursComparator));
 
@@ -171,9 +173,22 @@ export function isAvailable(employeeShift: EmployeeShift, date: Date, night: boo
 
 export function workingHoursComparator(a: EmployeeShift, b: EmployeeShift): number {
     if (a.hours !== null && b.hours !== null) {
+        if (a.hours === b.hours) {
+            return lastDateComparator(a, b);
+        }
         return a.hours - b.hours;
     }
     if (a.hours !== null && b.hours === null) {
+        return -1;
+    }
+    return 1;
+}
+
+export function lastDateComparator(a: EmployeeShift, b: EmployeeShift): number {
+    if (a.lastDate !== null && b.lastDate !== null) {
+        return a.lastDate.getTime() - b.lastDate.getTime();
+    }
+    if (a.lastDate !== null && b.lastDate === null) {
         return -1;
     }
     return 1;
