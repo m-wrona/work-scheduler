@@ -34,12 +34,12 @@ describe('shiftPattern', () => {
         schedule = {
             month: 1,
             year: 2025,
-            totalDays: 31,
             workingDays: 22,
             totalWorkingHours: 176,
             shiftsNumber: 14,
             workingDaysList: [],
             holidays: [],
+            monthlyBreakdown: [],
         };
         day = new Date(2025, 0, 10);
     });

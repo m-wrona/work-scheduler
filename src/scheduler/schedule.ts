@@ -2,7 +2,7 @@ import type { WorkSchedulerConfig } from "../types/config";
 import type { MonthSchedule } from "./calendar";
 import type { EmployeeShift, Schedule, Shift } from "./model";
 import type { Rule } from "./rules";
-import { Rules } from "./rules";
+import { nextShiftIsNotLaterThan, Rules } from "./rules";
 import { cloneEmployeeShift } from "./model";
 
 
@@ -14,7 +14,7 @@ export function nextShift(
     employeeShifts: Map<string, EmployeeShift>,
     rules: Rule[] = Rules,
     night: boolean = false,
-    maxTries: number = 1,
+    maxTries: number = 2,
     shuffle: boolean = true,
 ): Shift[] | null {
     if (dayIdx >= schedule.workingDaysList.length) {
@@ -31,7 +31,7 @@ export function nextShift(
     );
 
     planning: for (let i = 0; i < maxTries; i++) {
-        let employeeOrder = sortEmployeeShifts(employeeShifts, night, shuffle);
+        let employeeOrder = sortEmployeeShifts(employeeShifts, night, shuffle, date);
         const shiftEmployees = createShift(
             date,
             employeeOrder,
@@ -66,6 +66,7 @@ export function nextShift(
             rules,
             !night,
             maxTries,
+            shuffle,
         );
 
         if (nextEmployeeShift !== null) {
@@ -97,16 +98,16 @@ export function createShift(
 
         const e = cloneEmployeeShift(employeeShift);
         e.lastDate = date;
-        e.nextNotSoonerThan = new Date(
+        e.nextNotSoonerThan = new Date(Date.UTC(
             date.getFullYear(),
             date.getMonth(),
             date.getDate() + cfg.shifts.daysFreeBetweenShifts + 1,
-        );
-        e.nextNotLaterThan = new Date(
+        ));
+        e.nextNotLaterThan = new Date(Date.UTC(
             date.getFullYear(),
             date.getMonth(),
             date.getDate() + cfg.shifts.maxDaysFreeBetweenShifts,
-        );
+        ));
         e.hours += cfg.shifts.defaultShiftLength;
         e.hoursPerMonth.set(date.getMonth(), (e.hoursPerMonth.get(date.getMonth()) || 0) + cfg.shifts.defaultShiftLength);
         e.lastShiftNight = night;
@@ -122,35 +123,45 @@ export function createShift(
     return null;
 }
 
-export function sortEmployeeShifts(employeeShifts: Map<string, EmployeeShift>, night: boolean, shuffle: boolean = false): EmployeeShift[] {
+export function sortEmployeeShifts(
+    employeeShifts: Map<string, EmployeeShift>,
+    night: boolean,
+    shuffle: boolean = false,
+    notLaterThan: Date | null = null,
+): EmployeeShift[] {
     let remaining = [...employeeShifts.values()];
     let order: EmployeeShift[] = [];
 
     if (night) {
-        order.push(...remaining.filter(e => e.lastDate !== null));
-        remaining = remaining.filter(e => e.lastDate === null);
+        order.push(...remaining.filter(e => e.lastDate !== null).sort(lastDateComparator));
+        remaining = remaining.filter(e => !order.includes(e)).sort(workingHoursComparator);
     } else {
-        order.push(...remaining.filter(e => e.lastDate === null));
-        remaining = remaining.filter(e => e.lastDate !== null);
+        order.push(...remaining.filter(e => e.lastDate === null).sort(workingHoursComparator));
+        remaining = remaining.filter(e => !order.includes(e)).sort(lastDateComparator);
     }
 
     if (shuffle) {
         order = shuffleArray(order);
-    } else {
-        order = order.sort(workingHoursComparator);
     }
-    order.push(...remaining.sort(workingHoursComparator));
+    order.push(...remaining);
+
+    if (notLaterThan !== null) {
+        remaining = [...order]
+        order = order.filter(e => e.nextNotLaterThan !== null && notLaterThan.getTime() == e.nextNotLaterThan.getTime());
+        remaining = remaining.filter(e => !order.includes(e));
+        order.push(...remaining);
+    }
 
     return order;
 }
 
 export function isAvailable(employeeShift: EmployeeShift, date: Date, night: boolean): boolean {
     if (night && employeeShift.lastDate !== null && !employeeShift.lastShiftNight) {
-        const nextDay = new Date(employeeShift.lastDate);
+        const nextDay = new Date(Date.UTC(employeeShift.lastDate.getFullYear(), employeeShift.lastDate.getMonth(), employeeShift.lastDate.getDate()));
         nextDay.setDate(nextDay.getDate() + 1);
 
-        const normalizedDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-        const normalizedNextDay = new Date(nextDay.getFullYear(), nextDay.getMonth(), nextDay.getDate());
+        const normalizedDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+        const normalizedNextDay = new Date(Date.UTC(nextDay.getFullYear(), nextDay.getMonth(), nextDay.getDate()));
 
         if (normalizedDate.getTime() === normalizedNextDay.getTime()) {
             return true;
@@ -158,12 +169,12 @@ export function isAvailable(employeeShift: EmployeeShift, date: Date, night: boo
     }
 
     if (employeeShift.nextNotSoonerThan !== null) {
-        const normalizedDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-        const normalizedNotSoonerThan = new Date(
+        const normalizedDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+        const normalizedNotSoonerThan = new Date(Date.UTC(
             date.getFullYear(),
             employeeShift.nextNotSoonerThan.getMonth(),
             employeeShift.nextNotSoonerThan.getDate()
-        );
+        ));
 
         return normalizedDate >= normalizedNotSoonerThan;
     }
@@ -192,6 +203,16 @@ export function lastDateComparator(a: EmployeeShift, b: EmployeeShift): number {
         return -1;
     }
     return 1;
+}
+
+export function notLaterThanComparator(a: EmployeeShift, b: EmployeeShift): number {
+    if (a.nextNotLaterThan !== null && b.nextNotLaterThan !== null) {
+        return a.nextNotLaterThan.getTime() - b.nextNotLaterThan.getTime();
+    }
+    if (a.nextNotLaterThan !== null && b.nextNotLaterThan === null) {
+        return 1;
+    }
+    return -1;
 }
 
 /**

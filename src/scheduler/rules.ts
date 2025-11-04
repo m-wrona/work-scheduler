@@ -12,6 +12,7 @@ export type Rule = (
 
 export const Rules: Rule[] = [
     workingHoursWithinLimits,
+    nextShiftIsNotLaterThan,
     shiftPattern,
 ];
 
@@ -30,6 +31,31 @@ export function workingHoursWithinLimits(
 
     return hoursPerMonth <= monthStats!.totalWorkingHours + cfg.shifts.defaultShiftLength &&
         employeeShift.hours <= schedule.totalWorkingHours;
+}
+
+export function nextShiftIsNotLaterThan(
+    employeeShift: EmployeeShift,
+    cfg: WorkSchedulerConfig,
+    schedule: MonthSchedule,
+    day: Date,
+    night: boolean,
+): boolean {
+    if (employeeShift.nextNotLaterThan === null) {
+        return true;
+    }
+
+    const dayNormalized = new Date(Date.UTC(
+        day.getUTCFullYear(),
+        day.getUTCMonth(),
+        day.getUTCDate()
+    ));
+    const notLaterDate = new Date(Date.UTC(
+        employeeShift.nextNotLaterThan.getUTCFullYear(),
+        employeeShift.nextNotLaterThan.getUTCMonth(),
+        employeeShift.nextNotLaterThan.getUTCDate()
+    ));
+
+    return dayNormalized.getTime() < notLaterDate.getTime();
 }
 
 export function shiftPattern(
