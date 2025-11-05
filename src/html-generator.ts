@@ -2,11 +2,11 @@ import type { WorkSchedulerConfig } from './types/config';
 import { parseHolidayDate } from './types/config';
 import type { ScheduleGenerationResult, ScheduleDay, DayShift, EmployeeShifts, MonthlySchedulePlan } from './types/schedule';
 import type { Shift } from './scheduler/model';
-import type { MonthSchedule } from './scheduler/calendar';
+import type { MonthSchedule, MonthStats } from './scheduler/calendar';
 import { writeFileSync } from 'fs';
 import { join } from 'path';
 
-export function generateHTMLScheduleTable(scheduleResult: ScheduleGenerationResult, config: WorkSchedulerConfig, totalWorkingHours?: number): string {
+export function generateHTMLScheduleTable(scheduleResult: ScheduleGenerationResult, config: WorkSchedulerConfig, monthStats?: MonthStats): string {
   const { schedule } = scheduleResult;
   const month = schedule.month;
   const year = schedule.year;
@@ -60,11 +60,44 @@ export function generateHTMLScheduleTable(scheduleResult: ScheduleGenerationResu
     'Remaining hours'
   ];
   
+  // Helper function to check if a day is an employee's holiday
+  const isEmployeeHoliday = (employee: typeof config.employees[0], dayNumber: number, month: number, year: number): boolean => {
+    if (!employee.holidays || employee.holidays.length === 0) {
+      return false;
+    }
+    
+    const date = new Date(Date.UTC(year, month - 1, dayNumber));
+    const dateString = date.toISOString().slice(0, 10);
+    
+    // Check if this date matches any of the employee's holidays
+    for (const holidayStr of employee.holidays) {
+      const holidayDate = parseHolidayDate(holidayStr, year);
+      if (holidayDate && holidayDate.toISOString().slice(0, 10) === dateString) {
+        return true;
+      }
+      // Also check if holiday falls in next year (for schedules spanning year boundary)
+      const nextYearHoliday = parseHolidayDate(holidayStr, year + 1);
+      if (nextYearHoliday && nextYearHoliday.toISOString().slice(0, 10) === dateString) {
+        return true;
+      }
+    }
+    
+    return false;
+  };
+
   // Create employee schedule data
   const employeeSchedules = config.employees.map((emp, index) => {
     const employeeName = `${index + 1}. ${emp.firstName} ${emp.lastName}`;
     const dayShifts = new Array(daysInMonth).fill('');
     let shiftCount = 0;
+    
+    // First, mark employee holidays with 'U'
+    for (let dayNumber = 1; dayNumber <= daysInMonth; dayNumber++) {
+      const dayIndex = dayNumber - 1;
+      if (isEmployeeHoliday(emp, dayNumber, month, year)) {
+        dayShifts[dayIndex] = 'U';
+      }
+    }
     
     // Fill in the shifts for each day
     schedule.days.forEach(day => {
@@ -86,6 +119,11 @@ export function generateHTMLScheduleTable(scheduleResult: ScheduleGenerationResu
         return;
       }
       
+      // Skip if this day is already marked as employee holiday ('U')
+      if (dayShifts[dayIndex] === 'U') {
+        return;
+      }
+      
       // Check if employee is in daily shift
       const isInDailyShift = day.shift.dailyShift.some(shift => shift.employee.id === emp.id);
       // Check if employee is in night shift  
@@ -104,16 +142,21 @@ export function generateHTMLScheduleTable(scheduleResult: ScheduleGenerationResu
     const totalHours = shiftCount * config.shifts.defaultShiftLength;
     const totalHoursStr = totalHours.toFixed(2);
     
-    // Calculate remaining hours (hours worked - total working hours available)
+    // Calculate remaining hours (hours worked - employee's total working hours available)
     let remainingHoursStr = '';
-    if (totalWorkingHours !== undefined) {
-      const remainingHours = totalHours - totalWorkingHours;
-      if (remainingHours > 0) {
-        remainingHoursStr = `+${remainingHours.toFixed(1)}h`;
-      } else if (remainingHours < 0) {
-        remainingHoursStr = `${remainingHours.toFixed(1)}h`;
-      } else {
-        remainingHoursStr = '0h';
+    if (monthStats) {
+      // Find this employee's stats to get their working hours
+      const employeeStat = monthStats.employeeMonthStats.find(stat => stat.employee.id === emp.id);
+      if (employeeStat) {
+        const employeeWorkingHours = employeeStat.totalWorkingHours;
+        const remainingHours = totalHours - employeeWorkingHours;
+        if (remainingHours > 0) {
+          remainingHoursStr = `+${remainingHours.toFixed(1)}h`;
+        } else if (remainingHours < 0) {
+          remainingHoursStr = `${remainingHours.toFixed(1)}h`;
+        } else {
+          remainingHoursStr = '0h';
+        }
       }
     }
     
@@ -353,7 +396,7 @@ export function printHTMLFromShifts(shifts: Shift[], config: WorkSchedulerConfig
       errors: [],
     };
 
-    const tableHtml = generateHTMLScheduleTable(htmlResult, config, monthStats.totalWorkingHours);
+    const tableHtml = generateHTMLScheduleTable(htmlResult, config, monthStats);
     
     // Generate summary HTML for this month using monthStats
     const summaryHtml = `
@@ -378,8 +421,15 @@ export function printHTMLFromShifts(shifts: Shift[], config: WorkSchedulerConfig
   const scheduleFirst = scheduleMonths[0];
   const scheduleLast = scheduleMonths[scheduleMonths.length - 1];
   
-  // Calculate total working hours for the entire schedule
-  const totalScheduleWorkingHours = scheduleMonths.reduce((sum, monthStats) => sum + monthStats.totalWorkingHours, 0);
+  // Calculate total working hours per employee across all months
+  const employeeWorkingHoursTotal = new Map<number, number>();
+  for (const monthStats of scheduleMonths) {
+    for (const employeeStat of monthStats.employeeMonthStats) {
+      const empId = employeeStat.employee.id;
+      const currentTotal = employeeWorkingHoursTotal.get(empId) || 0;
+      employeeWorkingHoursTotal.set(empId, currentTotal + employeeStat.totalWorkingHours);
+    }
+  }
   
   // Calculate total hours per employee across all shifts
   const employeeTotals = new Map<number, number>();
@@ -395,7 +445,8 @@ export function printHTMLFromShifts(shifts: Shift[], config: WorkSchedulerConfig
   const employeeSummaryRows = config.employees.map((emp, index) => {
     const employeeName = `${index + 1}. ${emp.firstName} ${emp.lastName}`;
     const totalHoursPlanned = employeeTotals.get(emp.id) || 0;
-    const remainingHours = totalHoursPlanned - totalScheduleWorkingHours;
+    const employeeWorkingHours = employeeWorkingHoursTotal.get(emp.id) || 0;
+    const remainingHours = totalHoursPlanned - employeeWorkingHours;
     let remainingHoursStr = '';
     if (remainingHours > 0) {
       remainingHoursStr = `+${remainingHours.toFixed(1)}h`;
@@ -409,7 +460,7 @@ export function printHTMLFromShifts(shifts: Shift[], config: WorkSchedulerConfig
       <tr>
         <td class="employee-name">${employeeName}</td>
         <td class="total-hours">${totalHoursPlanned.toFixed(2)}</td>
-        <td>${totalScheduleWorkingHours.toFixed(2)}</td>
+        <td>${employeeWorkingHours.toFixed(2)}</td>
         <td class="remaining-hours">${remainingHoursStr}</td>
       </tr>
     `;
