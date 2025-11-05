@@ -133,24 +133,16 @@ export function sortEmployeeShifts(
     let order: EmployeeShift[] = [];
 
     if (night) {
-        order.push(...remaining.filter(e => e.lastDate !== null).sort(lastDateComparator));
+        order.push(...remaining.filter(e => e.lastDate !== null &&
+            e.lastDate.getTime() === new Date(Date.UTC(notLaterThan!.getFullYear(), notLaterThan!.getMonth(), notLaterThan!.getDate()-1)).getTime()));
         remaining = remaining.filter(e => !order.includes(e)).sort(workingHoursComparator);
-    } else {
-        order.push(...remaining.filter(e => e.lastDate === null).sort(workingHoursComparator));
-        remaining = remaining.filter(e => !order.includes(e)).sort(lastDateComparator);
-    }
+    } 
 
     if (shuffle) {
         order = shuffleArray(order);
     }
+    remaining = remaining.sort(workingHoursComparator);
     order.push(...remaining);
-
-    if (notLaterThan !== null) {
-        remaining = [...order]
-        order = order.filter(e => e.nextNotLaterThan !== null && notLaterThan.getTime() == e.nextNotLaterThan.getTime());
-        remaining = remaining.filter(e => !order.includes(e));
-        order.push(...remaining);
-    }
 
     return order;
 }
