@@ -39,6 +39,7 @@ const monthSchedule = createMonthSchedule(
   typedConfig.workingHours.defaultDailyHours,
   typedConfig.shifts.defaultShiftLength,
   typedConfig.schedule.holidays,
+  typedConfig.employees,
 );
 
 console.log('\nSchedule Calculation:');
@@ -55,6 +56,7 @@ console.log('Last day of  schedule:', monthSchedule.workingDaysList[monthSchedul
 console.log('\nMonthly Breakdown:');
 console.log('==================');
 monthSchedule.monthlyBreakdown.forEach((monthStats, index) => {
+  console.log('--------------------------------');
   console.log(`\nMonth ${index + 1}: ${monthStats.month}/${monthStats.year}`);
   console.log(`  Working days (Mon-Fri): ${monthStats.workingDays}`);
   console.log(`  Holidays: ${monthStats.holidays.length > 0 ? monthStats.holidays.map(h => h.toISOString().slice(0, 10)).join(', ') : 'None'}`);
@@ -62,6 +64,16 @@ monthSchedule.monthlyBreakdown.forEach((monthStats, index) => {
   console.log(`  Shifts number: ${monthStats.shiftsNumber}`);
   console.log(`  First day: ${monthStats.workingDaysList[0]?.toISOString().slice(0, 10) || 'N/A'}`);
   console.log(`  Last day: ${monthStats.workingDaysList[monthStats.workingDaysList.length - 1]?.toISOString().slice(0, 10) || 'N/A'}`);
+
+
+  monthStats.employeeMonthStats.forEach((employeeStats, index) => {
+    console.log(' ');
+    console.log(`  Employee ${index + 1}: ${employeeStats.employee.firstName} ${employeeStats.employee.lastName}`);
+    console.log(`    Working days: ${employeeStats.workingDays}`);
+    console.log(`    Total working hours: ${employeeStats.totalWorkingHours} hours`);
+    console.log(`    Shifts number: ${employeeStats.shiftsNumber}`);
+    console.log(`    Holidays: ${employeeStats.holidays.length > 0 ? employeeStats.holidays.map(h => h.toISOString().slice(0, 10)).join(', ') : 'None'}`);
+  });
 });
 
 const shifts = nextShift(
