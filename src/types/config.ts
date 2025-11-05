@@ -2,6 +2,7 @@ export interface Employee {
   id: number;
   firstName: string;
   lastName: string;
+  holidays?: string[]; // Date strings in DD.MM format
 }
 
 export interface WorkingHours {
@@ -40,7 +41,9 @@ export function isValidConfig(config: any): config is WorkSchedulerConfig {
     config.employees.every((emp: Employee) => 
       typeof emp.id === 'number' &&
       typeof emp.firstName === 'string' &&
-      typeof emp.lastName === 'string'
+      typeof emp.lastName === 'string' &&
+      (emp.holidays === undefined || 
+       (Array.isArray(emp.holidays) && emp.holidays.every((holiday: string) => isValidHoliday(holiday))))
     ) &&
     config.workingHours &&
     typeof config.workingHours.defaultDailyHours === 'number' &&
