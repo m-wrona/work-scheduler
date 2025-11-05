@@ -260,3 +260,15 @@ export function getAllDaysInMonth(month: number, year: number): Date[] {
 
   return allDays;
 }
+
+export function getEmployeeMonthStats(
+  schedule: MonthSchedule, 
+  month: number, 
+  year: number, 
+  employeeId: number,
+): EmployeeMonthStats | undefined {
+  return schedule.monthlyBreakdown
+    .find(m => m.month === month && m.year === year)
+    ?.employeeMonthStats
+    .find(e => e.employee.id === employeeId);
+}

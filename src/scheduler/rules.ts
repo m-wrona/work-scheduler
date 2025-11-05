@@ -1,5 +1,5 @@
 import type { WorkSchedulerConfig } from "../types/config";
-import type { MonthSchedule } from "./calendar";
+import { getEmployeeMonthStats, type MonthSchedule } from "./calendar";
 import type { EmployeeShift } from "./model";
 
 export type Rule = (
@@ -24,14 +24,21 @@ export function workingHoursWithinLimits(
     day: Date,
     night: boolean,
 ): boolean {
-    const monthIndex = day.getUTCMonth() + 1; // Convert from 0-11 to 1-12
-    const year = day.getUTCFullYear();
     const monthKey = day.getUTCMonth(); // 0-11 for hoursPerMonth map key
     const hoursPerMonth = employeeShift.hoursPerMonth.get(monthKey) || 0;
-    const monthStats = schedule.monthlyBreakdown.find(m => m.month === monthIndex && m.year === year);
 
-    return hoursPerMonth <= monthStats!.totalWorkingHours + cfg.shifts.defaultShiftLength &&
-        employeeShift.hours <= schedule.totalWorkingHours;
+    const employeeSchedule = getEmployeeMonthStats(
+        schedule,
+        day.getUTCMonth() + 1,
+        day.getUTCFullYear(),
+        employeeShift.employee.id,
+    )!;
+
+    if (employeeSchedule.holidays.length > 0) {
+        return hoursPerMonth <= employeeSchedule.totalWorkingHours;
+    }
+
+    return hoursPerMonth <= employeeSchedule.totalWorkingHours + cfg.shifts.defaultShiftLength;
 }
 
 export function noShiftInHolidays(
@@ -41,14 +48,12 @@ export function noShiftInHolidays(
     day: Date,
     night: boolean,
 ): boolean {
-    const employeeSchedule = schedule.monthlyBreakdown
-        .find(m => m.month === day.getUTCMonth())
-        ?.employeeMonthStats
-        .find(e => e.employee.id === employeeShift.employee.id);
-
-    if (!employeeSchedule) {
-        return true;
-    }
+    const employeeSchedule = getEmployeeMonthStats(
+        schedule,
+        day.getUTCMonth() + 1,
+        day.getUTCFullYear(),
+        employeeShift.employee.id,
+    )!;
 
     return !employeeSchedule.holidays.some(h => h.getTime() === day.getTime());
 }
